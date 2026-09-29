@@ -28,11 +28,15 @@ namespace PokeProfessions.World
         {
             I = this;
 
+            gameObject.AddComponent<SessionLog>();
+            SessionLog.Write("Game.Awake: DBs loading");
+
             ItemDB.Init();
             MoveDB.Init();
             CreatureDB.Init();
             NodeDB.Init();
             StoryData.Init();
+            SessionLog.Write("DBs initialized, save " + (GameState.SaveExists() ? "loaded" : "not found"));
 
             State = GameState.Load();
             if (State == null)
@@ -51,6 +55,7 @@ namespace PokeProfessions.World
             SpawnPlayer();
             SpawnStoryObjects();
             SpawnTrainersIfDefeated();
+            SessionLog.Write("world ready, party " + State.party.Count);
 
             nextAutosave = Time.time + 20f;
         }
