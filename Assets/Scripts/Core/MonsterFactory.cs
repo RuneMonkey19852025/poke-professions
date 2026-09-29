@@ -61,7 +61,7 @@ namespace PokeProfessions.Core
             var sp = CreatureDB.Get(speciesId);
             if (sp == null) return null;
 
-            var c = new Creature { speciesId = speciesId, level = Mathf.Clamp(level, 1, 60) };
+            var c = new Creature { speciesId = speciesId, level = Mathf.Clamp(level, 1, BattleEngine.MaxCreatureLevel) };
             FillMoves(c, sp);
             c.curHP = c.MaxHP;
             c.shiny = Random.value < 0.015f; // 1.5% shiny

@@ -78,6 +78,7 @@ namespace PokeProfessions.Core
         {
             All = new Dictionary<string, SpeciesDef>();
             Order = new List<string>();
+            evolvedForms = null;
 
             // ---------- Meadowfall (starting zone) ----------
             S("sprigling", "Sprigling", Element.Verdant, 12, 11, 10, 9,
@@ -90,8 +91,12 @@ namespace PokeProfessions.Core
               "#5FA84F", "#2C5E2A", "quad", 1.25f, 45, 42, "meadow");
             S("briarwolf", "Briarwolf", Element.Verdant, 22, 22, 18, 15,
               "A guardian of overgrown ruins, patient and proud.",
-              "", 0, new[] { "scratch", "leafdart", "briar", "focus", "ravage", "mend" },
+              "thornmare", 40, new[] { "scratch", "leafdart", "briar", "focus", "ravage", "mend" },
               "#4A8A3E", "#1F4A1E", "quad", 1.55f, 30, 66, "meadow");
+            S("thornmare", "Thornmare", Element.Verdant, 30, 28, 24, 20,
+              "Its thicket mane blooms each spring, then goes to war.",
+              "", 0, new[] { "leafdart", "briar", "focus", "ravage", "leech", "springshoot" },
+              "#3C7A34", "#18401A", "quad", 1.85f, 25, 84, "meadow");
 
             S("puddlepup", "Puddlepup", Element.Tide, 13, 10, 11, 10,
               "Chases raindrops and puddles with equal joy.",
@@ -103,8 +108,12 @@ namespace PokeProfessions.Core
               "#5B94C8", "#28527E", "quad", 1.3f, 45, 42, "meadow");
             S("maelmoor", "Maelmoor", Element.Tide, 24, 21, 19, 16,
               "Old riverfolk say it herds the currents themselves.",
-              "", 0, new[] { "douse", "ripple", "bodyslam", "harden", "glacier", "soothe" },
+              "abysshepherd", 40, new[] { "douse", "ripple", "bodyslam", "harden", "glacier", "soothe" },
               "#477FB3", "#1E4066", "quad", 1.6f, 30, 66, "meadow");
+            S("abysshepherd", "Abysshepherd", Element.Tide, 32, 27, 25, 21,
+              "It surveys the deep water and counts it, like coins.",
+              "", 0, new[] { "ripple", "bodyslam", "harden", "glacier", "soothe", "lullaby" },
+              "#3A6C9E", "#183252", "quad", 1.9f, 25, 84, "meadow");
 
             S("cindercub", "Cindercub", Element.Ember, 12, 12, 9, 11,
               "Sleeps curled around its own warm tail.",
@@ -116,8 +125,12 @@ namespace PokeProfessions.Core
               "#D96F35", "#8C3B18", "quad", 1.3f, 45, 42, "meadow");
             S("solarmane", "Solarmane", Element.Ember, 23, 24, 17, 19,
               "Its mane burns brightest at noon.",
-              "", 0, new[] { "emberbit", "fume", "flurrena", "focus", "cinder", "ravage" },
+              "pyrelord", 40, new[] { "emberbit", "fume", "flurrena", "focus", "cinder", "ravage" },
               "#C25C28", "#6E2D12", "quad", 1.6f, 30, 66, "meadow");
+            S("pyrelord", "Pyrelord", Element.Ember, 31, 31, 24, 24,
+              "Dawn arrives a little early wherever it stretches.",
+              "", 0, new[] { "flurrena", "fume", "cinder", "focus", "ravage", "emberbit" },
+              "#B04E22", "#5E2410", "quad", 1.9f, 25, 84, "meadow");
 
             S("flitwing", "Flitwing", Element.Gale, 11, 11, 8, 13,
               "A pocket-sized storm in feathers.",
@@ -125,8 +138,12 @@ namespace PokeProfessions.Core
               "#9FB6E8", "#5A6FA8", "avian", 0.9f, 78, 20, "meadow");
             S("galedart", "Galedart", Element.Gale, 15, 16, 11, 18,
               "Rides thermals over the whole valley in a morning.",
-              "", 0, new[] { "quickpeck", "gust", "flashstep", "cyclone", "bodyslam", "focus" },
+              "skylineer", 36, new[] { "quickpeck", "gust", "flashstep", "cyclone", "bodyslam", "focus" },
               "#8AA5DE", "#4A5F98", "avian", 1.2f, 45, 44, "meadow");
+            S("skylineer", "Skyliner", Element.Gale, 23, 23, 17, 26,
+              "It races the horizon and usually wins.",
+              "", 0, new[] { "quickpeck", "flashstep", "cyclone", "bodyslam", "focus", "gust" },
+              "#7A98D2", "#3A5088", "avian", 1.5f, 35, 64, "meadow");
 
             S("burrowmouse", "Burrowmouse", Element.Normal, 12, 10, 10, 11,
               "Its cheeks are bigger than its ambitions.",
@@ -134,8 +151,12 @@ namespace PokeProfessions.Core
               "#C4A882", "#8A7050", "quad", 0.9f, 82, 20, "meadow");
             S("vaultmole", "Vaultmole", Element.Stone, 17, 14, 15, 8,
               "Digs counting-holes: one for every coin it finds.",
-              "", 0, new[] { "scratch", "mudsling", "bulwark", "pebble", "landslide", "harden" },
+              "grottolord", 36, new[] { "scratch", "mudsling", "bulwark", "pebble", "landslide", "harden" },
               "#A88F6C", "#6E5A40", "quad", 1.15f, 50, 44, "meadow");
+            S("grottolord", "Grottolord", Element.Stone, 27, 21, 27, 11,
+              "Its burrow is a bank. Its patience, a vault door.",
+              "", 0, new[] { "mudsling", "bulwark", "landslide", "harden", "pebble", "bodyslam" },
+              "#96795A", "#58452E", "quad", 1.55f, 35, 64, "meadow");
 
             // ---------- Emberrock Ridge ----------
             S("magmite", "Magmite", Element.Ember, 14, 13, 12, 6,
@@ -144,16 +165,24 @@ namespace PokeProfessions.Core
               "#D06838", "#7A3418", "rock", 1f, 55, 26, "ridge");
             S("cragma", "Cragma", Element.Stone, 20, 18, 20, 6,
               "What the lava left behind grew a temper.",
-              "", 0, new[] { "pebble", "harden", "landslide", "bulwark", "emberbit", "fume" },
+              "obcelandor", 40, new[] { "pebble", "harden", "landslide", "bulwark", "emberbit", "fume" },
               "#9A6A4A", "#5A3A24", "rock", 1.4f, 40, 50, "ridge");
+            S("obcelandor", "Obcelandor", Element.Stone, 30, 26, 30, 9,
+              "A walking monument. Maps disagree about where it lives.",
+              "", 0, new[] { "landslide", "bulwark", "harden", "fume", "emberbit", "pebble" },
+              "#825840", "#482C1C", "rock", 1.8f, 32, 72, "ridge");
             S("ashkit", "Ashkit", Element.Ember, 13, 14, 9, 13,
               "Leaves gray footprints that glow briefly.",
               "smoulder", 22, new[] { "scratch", "emberbit", "flashstep", "fume", "flurrena", "growl" },
               "#B85A50", "#70302C", "quad", 1f, 55, 26, "ridge");
             S("smoulder", "Smoulder", Element.Ember, 19, 20, 13, 17,
               "Its purr is a low banked fire.",
-              "", 0, new[] { "emberbit", "fume", "flurrena", "flashstep", "focus", "scratch" },
+              "pyrelynx_king", 38, new[] { "emberbit", "fume", "flurrena", "flashstep", "focus", "scratch" },
               "#A04840", "#5C2622", "quad", 1.3f, 40, 50, "ridge");
+            S("pyrelynx_king", "Emberlynx", Element.Ember, 27, 28, 19, 24,
+              "Its whiskers are lit fuses. It is always calm about it.",
+              "", 0, new[] { "fume", "flurrena", "flashstep", "focus", "scratch", "cinder" },
+              "#8E3C34", "#4E1E1A", "quad", 1.6f, 32, 70, "ridge");
 
             // ---------- Mirrorlake / fishing ----------
             S("glimmfish", "Glimmfish", Element.Tide, 12, 9, 10, 12,
@@ -162,16 +191,24 @@ namespace PokeProfessions.Core
               "#8AC8D8", "#4A8898", "aquatic", 0.9f, 65, 22, "lake");
             S("luminkeel", "Luminkeel", Element.Tide, 18, 14, 14, 15,
               "Its fin-fronds glow where the water is deepest.",
-              "", 0, new[] { "tuftide", "douse", "ripple", "soothe", "bodyslam", "glacier" },
+              "aurorafin", 38, new[] { "tuftide", "douse", "ripple", "soothe", "bodyslam", "glacier" },
               "#6FB0C4", "#3A7080", "aquatic", 1.25f, 45, 46, "lake");
+            S("aurorafin", "Aurorafin", Element.Tide, 26, 21, 20, 22,
+              "The lake lights up at dusk wherever it surfaces.",
+              "", 0, new[] { "douse", "ripple", "soothe", "bodyslam", "glacier", "lullaby" },
+              "#5C9CB4", "#2E5E6E", "aquatic", 1.6f, 32, 68, "lake");
             S("lilypad", "Lilypad", Element.Verdant, 14, 9, 13, 8,
               "A patient floater. Quite content. Do not disturb.",
               "bloomdrift", 18, new[] { "leafdart", "leech", "harden", "springshoot", "mend", "briar" },
               "#7AB86A", "#4A7A40", "aquatic", 1f, 60, 24, "lake");
             S("bloomdrift", "Bloomdrift", Element.Verdant, 20, 14, 18, 10,
               "It blooms once a year, magnificently, then naps.",
-              "", 0, new[] { "leafdart", "leech", "springshoot", "mend", "briar", "soothe" },
+              "lilycrown", 38, new[] { "leafdart", "leech", "springshoot", "mend", "briar", "soothe" },
               "#68A85A", "#3A6A32", "aquatic", 1.3f, 45, 48, "lake");
+            S("lilycrown", "Lilycrown", Element.Verdant, 28, 20, 26, 14,
+              "Its flower court opens in ceremony at first light.",
+              "", 0, new[] { "leech", "springshoot", "mend", "briar", "soothe", "leafdart" },
+              "#58984C", "#2C5A28", "aquatic", 1.6f, 32, 68, "lake");
 
             // ---------- Hushpine Hollow ----------
             S("mothlumen", "Mothlumen", Element.Mind, 12, 11, 9, 12,
@@ -180,38 +217,62 @@ namespace PokeProfessions.Core
               "#C8A8E0", "#8068A8", "bug", 0.9f, 60, 24, "hollow");
             S("dreamora", "Dreamora", Element.Mind, 18, 17, 13, 16,
               "It hums the thoughts you haven't said aloud.",
-              "", 0, new[] { "mindnip", "lullaby", "soothe", "lucence", "nightfall", "focus" },
+              "reverie", 40, new[] { "mindnip", "lullaby", "soothe", "lucence", "nightfall", "focus" },
               "#B090CC", "#68508C", "bug", 1.25f, 45, 48, "hollow");
+            S("reverie", "Reverie", Element.Mind, 26, 25, 19, 23,
+              "Half remembered by morning, impossible to forget by night.",
+              "", 0, new[] { "lucence", "lullaby", "soothe", "nightfall", "focus", "mindnip" },
+              "#9E7CBE", "#543C76", "bug", 1.6f, 32, 70, "hollow");
             S("gloomcap", "Gloomcap", Element.Toxic, 14, 12, 12, 7,
               "A grumpy mushroom with opinions about weather.",
               "sporesage", 22, new[] { "venomspit", "harden", "leech", "miasma", "springshoot", "growl" },
               "#9A78B0", "#5C4874", "bug", 1f, 60, 25, "hollow");
             S("sporesage", "Sporesage", Element.Toxic, 20, 18, 17, 9,
               "Speaks in spore-clouds. The trees listen.",
-              "", 0, new[] { "venomspit", "miasma", "leech", "springshoot", "mend", "harden" },
+              "mycelorn", 40, new[] { "venomspit", "miasma", "leech", "springshoot", "mend", "harden" },
               "#8668A0", "#4C3860", "bug", 1.35f, 45, 50, "hollow");
+            S("mycelorn", "Mycelorn", Element.Toxic, 29, 25, 24, 13,
+              "A prophet of rot: what it quotes, the forest does.",
+              "", 0, new[] { "miasma", "leech", "springshoot", "mend", "harden", "venomspit" },
+              "#6E5490", "#3A2A50", "bug", 1.7f, 32, 72, "hollow");
             S("umbrafox", "Umbrafox", Element.Shade, 15, 15, 10, 14,
               "Seen only as a smile, and then not even that.",
               "nocturne", 24, new[] { "shadeslip", "growl", "nightfall", "lullaby", "ravage", "mindnip" },
               "#6A5A8A", "#3A3054", "quad", 1f, 55, 28, "hollow");
             S("nocturne", "Nocturne", Element.Shade, 21, 22, 14, 18,
               "The Hollow's own shadow, walking politely abroad.",
-              "", 0, new[] { "shadeslip", "nightfall", "lullaby", "ravage", "mindnip", "focus" },
+              "eclipse", 42, new[] { "shadeslip", "nightfall", "lullaby", "ravage", "mindnip", "focus" },
               "#564873", "#2A2240", "quad", 1.3f, 40, 54, "hollow");
+            S("eclipse", "Eclipse", Element.Shade, 29, 29, 20, 26,
+              "The moon borrows its smile on dark nights.",
+              "", 0, new[] { "nightfall", "lullaby", "ravage", "mindnip", "focus", "shadeslip" },
+              "#44375C", "#1E1830", "quad", 1.65f, 30, 76, "hollow");
 
             // ---------- The Hollow (rare) ----------
             S("sleeperling", "Sleeperling", Element.Mind, 16, 14, 14, 12,
               "A fragment of a Hollow Sleeper, dreaming itself awake.",
-              "", 0, new[] { "mindnip", "lullaby", "soothe", "lucence", "nightfall", "focus" },
+              "dreamwarden", 45, new[] { "mindnip", "lullaby", "soothe", "lucence", "nightfall", "focus" },
               "#B8C8F0", "#6878A8", "spirit", 1.1f, 25, 40, "hollow_deep");
+            S("dreamwarden", "Dreamwarden", Element.Mind, 30, 26, 26, 22,
+              "It keeps the Sleeper's dreams from wandering off alone.",
+              "", 0, new[] { "lucence", "lullaby", "soothe", "nightfall", "focus", "bodyslam" },
+              "#9CB2E8", "#506090", "spirit", 1.5f, 22, 90, "hollow_deep");
             S("frostwisp", "Frostwisp", Element.Frost, 15, 14, 11, 16,
               "A cold breath the mountain forgot to exhale.",
-              "", 0, new[] { "frostbite", "gust", "soothe", "glacier", "cyclone", "lullaby" },
+              "glacierveil", 45, new[] { "frostbite", "gust", "soothe", "glacier", "cyclone", "lullaby" },
               "#BFE4E8", "#6AA8B0", "spirit", 1f, 28, 38, "hollow_deep");
+            S("glacierveil", "Glacierveil", Element.Frost, 27, 25, 22, 25,
+              "Winter follows it around like a loyal dog.",
+              "", 0, new[] { "glacier", "cyclone", "soothe", "frostbite", "gust", "lullaby" },
+              "#A2D4DA", "#549098", "spirit", 1.45f, 24, 88, "hollow_deep");
             S("gildra", "Gildra", Element.Beast, 22, 20, 16, 18,
               "A golden-maned guardian beast from valley legend.",
-              "", 0, new[] { "gnaw", "ravage", "focus", "bulwark", "cyclone", "nightfall" },
+              "aurelion", 60, new[] { "gnaw", "ravage", "focus", "bulwark", "cyclone", "nightfall" },
               "#E0B84A", "#A87C28", "quad", 1.5f, 15, 60, "hollow_deep");
+            S("aurelion", "Aurelion", Element.Beast, 32, 30, 24, 27,
+              "The legend, grown into its whole name. The Vale shines brighter for it.",
+              "", 0, new[] { "ravage", "focus", "bulwark", "cyclone", "nightfall", "gnaw" },
+              "#F2CC58", "#B88C30", "quad", 1.85f, 12, 110, "hollow_deep");
         }
 
         static void S(string id, string name, Element el, int hp, int atk, int def, int spd,
@@ -237,11 +298,30 @@ namespace PokeProfessions.Core
             return All != null && All.TryGetValue(id, out s) ? s : null;
         }
 
+        static HashSet<string> evolvedForms;
+
+        /// <summary>True when no other species evolves into this one (a first stage).</summary>
+        public static bool IsBaseForm(string id)
+        {
+            if (evolvedForms == null)
+            {
+                evolvedForms = new HashSet<string>();
+                foreach (var kv in All)
+                    if (kv.Value != null && !string.IsNullOrEmpty(kv.Value.evolvesInto))
+                        evolvedForms.Add(kv.Value.evolvesInto);
+            }
+            return !evolvedForms.Contains(id);
+        }
+
+        /// <summary>Species that can spawn as wilds in a zone: base forms only,
+        /// so evolved creatures are something you earn, not something that
+        /// ambushes you at level 2.</summary>
         public static List<string> WildPoolFor(string zone)
         {
             var list = new List<string>();
             foreach (var kv in All)
-                if (kv.Value.habitatZone == zone || (zone == "meadow" && kv.Value.habitatZone == "lake"))
+                if ((kv.Value.habitatZone == zone || (zone == "meadow" && kv.Value.habitatZone == "lake"))
+                    && IsBaseForm(kv.Key))
                     list.Add(kv.Key);
             return list;
         }

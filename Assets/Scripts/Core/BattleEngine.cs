@@ -471,7 +471,7 @@ namespace PokeProfessions.Core
         void GainXp(Creature c, int xp)
         {
             c.xp += xp;
-            while (c.xp >= XpToNext(c.level) && c.level < 60)
+            while (c.xp >= XpToNext(c.level) && c.level < MaxCreatureLevel)
             {
                 c.xp -= XpToNext(c.level);
                 c.level++;
@@ -480,6 +480,8 @@ namespace PokeProfessions.Core
                 TryEvolve(c);
             }
         }
+
+        public const int MaxCreatureLevel = 200;
 
         public static int XpToNext(int level) => 18 + level * 9;
 
