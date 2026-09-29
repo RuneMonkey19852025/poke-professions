@@ -128,6 +128,7 @@ namespace PokeProfessions.World
         public static Dictionary<string, AnimationClip> ClipsFor(string resourcePath)
         {
             if (string.IsNullOrEmpty(resourcePath)) return null;
+            resourcePath = Normalize(resourcePath);
             if (clipCache.TryGetValue(resourcePath, out var cached)) return cached;
 
             var map = new Dictionary<string, AnimationClip>();
@@ -195,12 +196,20 @@ namespace PokeProfessions.World
             return npcId != null && NpcModel.TryGetValue(npcId, out var p) ? p : null;
         }
 
+        /// <summary>Model paths are stored without their "Models/" folder
+        /// segment; Resources loads relative to Assets/Resources, so prepend it.</summary>
+        static string Normalize(string resourcePath)
+        {
+            if (string.IsNullOrEmpty(resourcePath)) return resourcePath;
+            return resourcePath.StartsWith("Models/") ? resourcePath : "Models/" + resourcePath;
+        }
+
         /// <summary>Load (and cache) the model root GameObject, or null.</summary>
         public static GameObject Load(string resourcePath)
         {
             if (string.IsNullOrEmpty(resourcePath)) return null;
             if (cache.TryGetValue(resourcePath, out var go) && go != null) return go;
-            go = Resources.Load<GameObject>(resourcePath);
+            go = Resources.Load<GameObject>(Normalize(resourcePath));
             if (go != null) cache[resourcePath] = go;
             return go;
         }
@@ -210,10 +219,25 @@ namespace PokeProfessions.World
         /// Applies the style pass (chibi heads, anime eyes, boss aura) and
         /// sets up legacy Animation playback with mapped clips.
         /// </summary>
+        /// <summary>Boot-time diagnostic: probe Resources load paths in the player.
+        /// Silent when everything loads; warns loudly when they don't.</summary>
+        public static void Diag()
+        {
+            var kb = Resources.Load<GameObject>(Normalize("KenneyBlocky/character-a"));
+            var kk = Resources.Load<GameObject>(Normalize("KayKitAdventurers/Characters/fbx/Ranger"));
+            if (kb == null || kk == null)
+                Debug.LogWarning("[ModelDiag] KB=" + (kb != null) + " KK=" + (kk != null) +
+                                 " — model packs not fully available; some visuals will fall back");
+        }
+
         public static GameObject Instantiate(string resourcePath, Transform parent, float scale, string accentHex = null)
         {
             var src = Load(resourcePath);
-            if (src == null) return null;
+            if (src == null)
+            {
+                Debug.LogWarning("[Model] MISSING from build: '" + resourcePath + "' — falling back to procedural visual");
+                return null;
+            }
             var go = Object.Instantiate(src);
             go.name = "Model_" + resourcePath;
             go.transform.SetParent(parent, false);

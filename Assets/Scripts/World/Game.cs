@@ -55,6 +55,7 @@ namespace PokeProfessions.World
             SpawnPlayer();
             SpawnStoryObjects();
             SpawnTrainersIfDefeated();
+            ModelLoader.Diag();
             SessionLog.Write("world ready, party " + State.party.Count);
 
             nextAutosave = Time.time + 20f;

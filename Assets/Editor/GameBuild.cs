@@ -13,6 +13,10 @@ namespace PokeProfessions.EditorTools
     {
         public static void BuildLinux()
         {
+            // batch builds may skip picking up assets added outside the editor
+            // (e.g. downloaded packs) — force a full re-import scan first
+            AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+
             var scenes = new[] { "Assets/Scenes/GameScene.unity" };
             foreach (var s in scenes)
                 if (!File.Exists(s)) { Debug.LogError("Missing scene: " + s); EditorApplication.Exit(2); }
