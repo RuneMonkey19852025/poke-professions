@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using PokeProfessions.UI;
 
 namespace PokeProfessions.Core
@@ -31,7 +32,11 @@ namespace PokeProfessions.Core
 
         public void Start(NpcDef npc)
         {
-            if (npc == null || npc.dialogueNodes == null || npc.dialogueNodes.Length == 0) return;
+            if (npc == null || npc.dialogueNodes == null || npc.dialogueNodes.Length == 0)
+            {
+                Debug.LogError("[Dialogue] NPC has no dialogue nodes: " + (npc != null ? npc.id : "<null npc>"));
+                return;
+            }
             NpcId = npc.id;
             Jump(PickNode(npc));
         }
@@ -39,7 +44,14 @@ namespace PokeProfessions.Core
         void Jump(string nodeId)
         {
             var node = StoryData.GetNode(nodeId);
-            if (node == null || node.lines.Count == 0) { End(); return; }
+            if (node == null || node.lines == null || node.lines.Count == 0)
+            {
+                // broken reference in story data — log it loudly, close cleanly,
+                // and never push a null line at the UI
+                Debug.LogError("[Dialogue] Missing/empty node '" + nodeId + "' for NPC '" + NpcId + "'");
+                End();
+                return;
+            }
             queue = node.lines;
             idx = 0;
             Active = true;
@@ -48,6 +60,10 @@ namespace PokeProfessions.Core
 
         void ShowCurrent()
         {
+            // skip null lines rather than pushing them at the UI
+            while (idx < queue.Count && queue[idx] == null) idx++;
+            if (idx >= queue.Count) { End(); return; }
+
             Current = queue[idx];
             ApplyLine(Current);
             if (LineShown != null) LineShown(Current);

@@ -27,8 +27,7 @@ namespace PokeProfessions.UI
 
         void Build()
         {
-            cg = gameObject.AddComponent<CanvasGroup>();
-            cg.blocksRaycasts = false;
+            if (cg == null) { cg = gameObject.AddComponent<CanvasGroup>(); cg.blocksRaycasts = false; }
 
             // classic Pokémon frame: cream box, dark blue border, 2px white gap
             var box = UIFactory.BoxRounded(transform, "box", new Color(0.96f, 0.95f, 0.90f),
@@ -68,8 +67,22 @@ namespace PokeProfessions.UI
                 new Vector2(1, 0.5f), new Vector2(120, 32), () => Choose(false), 14, new Color(0.90f, 0.55f, 0.50f));
         }
 
+        /// <summary>Defensive: rebuild any UI piece that failed to create at boot,
+        /// so a partial Build can never leave dialogue permanently dead.</summary>
+        void EnsureBuilt()
+        {
+            if (cg != null && speaker != null && body != null && hint != null && choices != null) return;
+
+            // drop any partial widgets, then build fresh
+            for (int i = transform.childCount - 1; i >= 0; i--)
+                Destroy(transform.GetChild(i).gameObject);
+            Build();
+        }
+
         public void ShowLine(DialogueLine line)
         {
+            if (line == null) { Show(false); return; }
+            EnsureBuilt();
             Show(true);
             shownFrame = Time.frameCount;
             speaker.text = line.speaker;
