@@ -212,29 +212,35 @@ namespace PokeProfessions.World
             lintel.transform.localScale = new Vector3(doorW + 0.3f, 0.5f, 0.18f);
             lintel.GetComponent<MeshRenderer>().material = trimMat;
 
-            // gable roof: two slabs meeting at a ridge
-            const float roofW = 1.7f;
+            // gable roof: two slabs from eave to ridge. Geometry is computed so
+            // the panels meet exactly at the peak and overhang the walls; local
+            // rotations keep them correct on rotated (90°) houses too.
+            const float slope = 40f;
+            float run = w / 2f + 0.3f;                          // half-width incl. overhang
+            float len = run / Mathf.Cos(slope * Mathf.Deg2Rad); // eave→ridge slab length
+            float rise = run * Mathf.Tan(slope * Mathf.Deg2Rad);
+
             var roofL = GameObject.CreatePrimitive(PrimitiveType.Cube);
             roofL.name = "roofL";
             roofL.transform.SetParent(house.transform, false);
-            roofL.transform.localPosition = new Vector3(-w / 4f, wallH + roofW / 2f * 0.72f, 0f);
-            roofL.transform.localScale = new Vector3(roofW, 0.14f, d + 0.5f);
-            roofL.transform.rotation = Quaternion.Euler(0f, 0f, 40f);
+            roofL.transform.localPosition = new Vector3(-run / 2f, wallH + rise / 2f, 0f);
+            roofL.transform.localScale = new Vector3(len, 0.14f, d + 0.5f);
+            roofL.transform.localRotation = Quaternion.Euler(0f, 0f, slope);
             roofL.GetComponent<MeshRenderer>().material = ToonMat(roofHex);
 
             var roofR = GameObject.CreatePrimitive(PrimitiveType.Cube);
             roofR.name = "roofR";
             roofR.transform.SetParent(house.transform, false);
-            roofR.transform.localPosition = new Vector3(w / 4f, wallH + roofW / 2f * 0.72f, 0f);
-            roofR.transform.localScale = new Vector3(roofW, 0.14f, d + 0.5f);
-            roofR.transform.rotation = Quaternion.Euler(0f, 0f, -40f);
+            roofR.transform.localPosition = new Vector3(run / 2f, wallH + rise / 2f, 0f);
+            roofR.transform.localScale = new Vector3(len, 0.14f, d + 0.5f);
+            roofR.transform.localRotation = Quaternion.Euler(0f, 0f, -slope);
             roofR.GetComponent<MeshRenderer>().material = ToonMat(roofHex);
 
-            // ridge beam
+            // ridge beam caps the seam
             var ridge = GameObject.CreatePrimitive(PrimitiveType.Cube);
             ridge.name = "ridgeBeam";
             ridge.transform.SetParent(house.transform, false);
-            ridge.transform.localPosition = new Vector3(0f, wallH + roofW * 0.72f, 0f);
+            ridge.transform.localPosition = new Vector3(0f, wallH + rise + 0.06f, 0f);
             ridge.transform.localScale = new Vector3(0.22f, 0.22f, d + 0.55f);
             ridge.GetComponent<MeshRenderer>().material = trimMat;
 
@@ -301,7 +307,7 @@ namespace PokeProfessions.World
             roofL.transform.SetParent(tower.transform, false);
             roofL.transform.localPosition = new Vector3(-0.62f, 3.45f, 0f);
             roofL.transform.localScale = new Vector3(1.5f, 0.12f, 1.9f);
-            roofL.transform.rotation = Quaternion.Euler(0f, 0f, 38f);
+            roofL.transform.localRotation = Quaternion.Euler(0f, 0f, 38f);
             roofL.GetComponent<MeshRenderer>().material = ToonMat("#A8503C");
 
             var roofR = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -309,7 +315,7 @@ namespace PokeProfessions.World
             roofR.transform.SetParent(tower.transform, false);
             roofR.transform.localPosition = new Vector3(0.62f, 3.45f, 0f);
             roofR.transform.localScale = new Vector3(1.5f, 0.12f, 1.9f);
-            roofR.transform.rotation = Quaternion.Euler(0f, 0f, -38f);
+            roofR.transform.localRotation = Quaternion.Euler(0f, 0f, -38f);
             roofR.GetComponent<MeshRenderer>().material = ToonMat("#A8503C");
 
             var crossbar = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -443,7 +449,7 @@ namespace PokeProfessions.World
             roofL.transform.SetParent(parent, false);
             roofL.transform.localPosition = new Vector3(-0.5f, 2.4f, 0f);
             roofL.transform.localScale = new Vector3(1.2f, 0.08f, 1.2f);
-            roofL.transform.rotation = Quaternion.Euler(0f, 0f, 35f);
+            roofL.transform.localRotation = Quaternion.Euler(0f, 0f, 35f);
             roofL.GetComponent<MeshRenderer>().material = ToonMat("#A8503C");
 
             var roofR = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -451,7 +457,7 @@ namespace PokeProfessions.World
             roofR.transform.SetParent(parent, false);
             roofR.transform.localPosition = new Vector3(0.5f, 2.4f, 0f);
             roofR.transform.localScale = new Vector3(1.2f, 0.08f, 1.2f);
-            roofR.transform.rotation = Quaternion.Euler(0f, 0f, -35f);
+            roofR.transform.localRotation = Quaternion.Euler(0f, 0f, -35f);
             roofR.GetComponent<MeshRenderer>().material = ToonMat("#A8503C");
 
             AddBlobShadow(parent, 1.0f);
