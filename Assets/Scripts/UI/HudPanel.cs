@@ -114,7 +114,7 @@ namespace PokeProfessions.UI
         void BuildControls()
         {
             var t = UIFactory.TextAt(transform, "controls",
-                "WASD move · E interact · J journal · C creatures · F5 save · Esc close",
+                "WASD move · E interact · I bag · G gear · J journal · C creatures · F5 save · Esc close",
                 13,
                 new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-420, 8), new Vector2(420, 26),
                 TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.55f));

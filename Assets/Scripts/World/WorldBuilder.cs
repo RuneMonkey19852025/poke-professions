@@ -800,6 +800,9 @@ namespace PokeProfessions.World
             // shop — west side, clear of the spawn vista
             SpawnShop("general", "Vale Post Traders", new Vector3(-8.2f, 0, -16.8f));
 
+            // slot machine — by the shop stall, blinking in the lantern light
+            SpawnSlotsMachine(new Vector3(-11.8f, 0, -14.2f));
+
             // NPCs — townfolk in Emberpost, wanderers further afield
             // (the Sleeper spawns later via story flag)
             SpawnNpc("maren", new Vector3(7.5f, 0, -14.6f));   // by her stall, east plaza
@@ -1121,6 +1124,74 @@ namespace PokeProfessions.World
             col.center = new Vector3(0, 1f, 0);
             spawned.Add(go);
             return go;
+        }
+
+        /// <summary>The Lucky Snorlax: a chunky arcade slot machine interactable.</summary>
+        void SpawnSlotsMachine(Vector3 xz)
+        {
+            var go = new GameObject("SlotsMachine");
+            var s = go.AddComponent<SlotsInteractable>();
+            go.transform.position = new Vector3(xz.x, GroundHeight(xz.x, xz.z), xz.z);
+
+            var bodyMat = ToonMat("#7A3A50");   // dusty magenta cabinet
+            var trimMat = ToonMat("#3A2430");   // dark trim
+
+            var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            body.name = "cabinet";
+            body.transform.SetParent(go.transform, false);
+            body.transform.localPosition = new Vector3(0, 0.8f, 0);
+            body.transform.localScale = new Vector3(1.0f, 1.6f, 0.7f);
+            body.GetComponent<MeshRenderer>().material = bodyMat;
+            var bc = body.GetComponent<Collider>(); if (bc != null) Destroy(bc);
+
+            var screen = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            screen.name = "screen";
+            screen.transform.SetParent(go.transform, false);
+            screen.transform.localPosition = new Vector3(0, 1.25f, 0.36f);
+            screen.transform.localScale = new Vector3(0.72f, 0.5f, 0.05f);
+            screen.GetComponent<MeshRenderer>().material = ToonMat("#FFD75E");
+            var sc = screen.GetComponent<Collider>(); if (sc != null) Destroy(sc);
+
+            var tray = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            tray.name = "tray";
+            tray.transform.SetParent(go.transform, false);
+            tray.transform.localPosition = new Vector3(0, 0.45f, 0.32f);
+            tray.transform.localScale = new Vector3(0.7f, 0.16f, 0.25f);
+            tray.GetComponent<MeshRenderer>().material = trimMat;
+            var tc = tray.GetComponent<Collider>(); if (tc != null) Destroy(tc);
+
+            // lever: arm + red knob on the right side
+            var arm = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            arm.name = "leverArm";
+            arm.transform.SetParent(go.transform, false);
+            arm.transform.localPosition = new Vector3(0.62f, 1.15f, 0.1f);
+            arm.transform.localScale = new Vector3(0.05f, 0.42f, 0.05f);
+            arm.transform.rotation = Quaternion.Euler(0f, 0f, 24f);
+            arm.GetComponent<MeshRenderer>().material = ToonMat("#C8CDD4");
+            var ac = arm.GetComponent<Collider>(); if (ac != null) Destroy(ac);
+
+            var knob = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            knob.name = "leverKnob";
+            knob.transform.SetParent(go.transform, false);
+            knob.transform.localPosition = new Vector3(0.82f, 1.4f, 0.1f);
+            knob.transform.localScale = new Vector3(0.16f, 0.16f, 0.16f);
+            knob.GetComponent<MeshRenderer>().material = ToonMat("#E85030");
+            var kc = knob.GetComponent<Collider>(); if (kc != null) Destroy(kc);
+
+            // little feet
+            foreach (float sx in new[] { -0.38f, 0.38f })
+            {
+                var foot = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                foot.name = "foot";
+                foot.transform.SetParent(go.transform, false);
+                foot.transform.localPosition = new Vector3(sx, 0.06f, 0);
+                foot.transform.localScale = new Vector3(0.18f, 0.12f, 0.6f);
+                foot.GetComponent<MeshRenderer>().material = trimMat;
+                var fc = foot.GetComponent<Collider>(); if (fc != null) Destroy(fc);
+            }
+
+            AddBlobShadow(go.transform, 0.75f);
+            spawned.Add(go);
         }
 
         // ---------------- helpers ----------------

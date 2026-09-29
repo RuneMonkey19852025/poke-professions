@@ -109,5 +109,19 @@ namespace PokeProfessions.Core
             var d = Get(id);
             return d != null ? d.name : id;
         }
+
+        // ---------------- shared gear pools (single source of truth for UI) ----------------
+
+        /// <summary>Creature weapon items, strongest last (also the picker order).</summary>
+        public static readonly string[] CreatureWeapons = { "gear_claw", "gear_fang", "gear_stormspine" };
+
+        /// <summary>Creature armor items, strongest last.</summary>
+        public static readonly string[] CreatureArmors = { "gear_band", "gear_hide", "gear_charm", "gear_plate" };
+
+        /// <summary>Trainer equipment: one may be equipped at a time via GameState.equippedItem.</summary>
+        public static readonly string[] TrainerGear = { "forager_gloves", "miner_pick", "angler_rod", "lure_charm", "scout_band" };
+
+        /// <summary>Use-on-creature consumables in priority order (best fit first).</summary>
+        public static readonly string[] HealOrder = { "revive_tonic", "hearty_stew", "spice_bun", "salve", "trail_snack", "purge_draught" };
     }
 }

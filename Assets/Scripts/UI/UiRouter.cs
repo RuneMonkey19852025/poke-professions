@@ -24,6 +24,9 @@ namespace PokeProfessions.UI
         ShopPanel shop;
         JournalPanel journal;
         PartyPanel party;
+        InventoryPanel inventory;
+        EquipmentPanel equipment;
+        SlotsPanel slots;
         TitlePanel title;
         HudPanel hud;
 
@@ -40,8 +43,11 @@ namespace PokeProfessions.UI
             hud = HudPanel.Build(canvas);
             journal = JournalPanel.Build(canvas);
             party = PartyPanel.Build(canvas);
+            inventory = InventoryPanel.Build(canvas);
+            equipment = EquipmentPanel.Build(canvas);
             crafting = CraftingPanel.Build(canvas);
             shop = ShopPanel.Build(canvas);
+            slots = SlotsPanel.Build(canvas);
             battle = BattlePanel.Build(canvas);
             dialogue = DialoguePanel.Build(canvas);
             title = TitlePanel.Build(canvas);
@@ -153,6 +159,12 @@ namespace PokeProfessions.UI
             Push(shop.gameObject);
         }
 
+        public void OpenSlots()
+        {
+            slots.Open();
+            Push(slots.gameObject);
+        }
+
         public void StartBattle(BattleEngine engine)
         {
             battle.Begin(engine);
@@ -212,12 +224,28 @@ namespace PokeProfessions.UI
             { party.Open(); Push(party.gameObject); }
         }
 
+        public void ToggleInventory()
+        {
+            if (openPanels.Contains(inventory.gameObject)) { Pop(inventory.gameObject); inventory.Show(false); }
+            else if (!UiOpen || openPanels.Count == 1 && openPanels[0] == inventory.gameObject)
+            { inventory.Open(); Push(inventory.gameObject); }
+        }
+
+        public void ToggleEquipment()
+        {
+            if (openPanels.Contains(equipment.gameObject)) { Pop(equipment.gameObject); equipment.Show(false); }
+            else if (!UiOpen || openPanels.Count == 1 && openPanels[0] == equipment.gameObject)
+            { equipment.Open(); Push(equipment.gameObject); }
+        }
+
         void Update()
         {
             if (Game.I == null) return;
 
             if (Input.GetKeyDown(KeyCode.J) && CanTogglePanels()) ToggleJournal();
             if (Input.GetKeyDown(KeyCode.C) && CanTogglePanels()) ToggleParty();
+            if (Input.GetKeyDown(KeyCode.I) && CanTogglePanels()) ToggleInventory();
+            if (Input.GetKeyDown(KeyCode.G) && CanTogglePanels()) ToggleEquipment();
             if (Input.GetKeyDown(KeyCode.Escape)) CloseTop();
             if (Input.GetKeyDown(KeyCode.F5)) { Game.I.State.Save(); Toast.Push("Game saved."); }
         }
@@ -227,7 +255,8 @@ namespace PokeProfessions.UI
             // allowed when nothing is open except the panel being toggled
             if (!UiOpen) return true;
             return openPanels.Count == 1 &&
-                   (openPanels[0] == journal.gameObject || openPanels[0] == party.gameObject);
+                   (openPanels[0] == journal.gameObject || openPanels[0] == party.gameObject ||
+                    openPanels[0] == inventory.gameObject || openPanels[0] == equipment.gameObject);
         }
 
         void CloseTop()
@@ -239,8 +268,11 @@ namespace PokeProfessions.UI
 
             if (top == journal.gameObject) { journal.Show(false); Pop(top); }
             else if (top == party.gameObject) { party.Show(false); Pop(top); }
+            else if (top == inventory.gameObject) { inventory.Show(false); Pop(top); }
+            else if (top == equipment.gameObject) { equipment.Show(false); Pop(top); }
             else if (top == crafting.gameObject) { crafting.Show(false); Pop(top); }
             else if (top == shop.gameObject) { shop.Show(false); Pop(top); }
+            else if (top == slots.gameObject) { slots.Show(false); Pop(top); }
             else if (top == title.gameObject) { /* title stays */ }
         }
     }

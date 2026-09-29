@@ -15,13 +15,9 @@ namespace PokeProfessions.UI
         RectTransform list;
         readonly List<Button> rowButtons = new List<Button>();
         int selectedIdx = -1;
-        bool pendingEquip;
         string pendingItemId = "";
 
         // ---------------- creature gear picker state ----------------
-        static readonly string[] GearWeapons = { "gear_stormspine", "gear_fang", "gear_claw" };
-        static readonly string[] GearArmors = { "gear_plate", "gear_hide", "gear_charm", "gear_band" };
-        static readonly string[] CreatureGearIds = { "gear_claw", "gear_fang", "gear_stormspine", "gear_band", "gear_hide", "gear_plate", "gear_charm" };
         bool pickingWeapon;
         CanvasGroup pickerCg;
         RectTransform pickerList;
@@ -83,7 +79,6 @@ namespace PokeProfessions.UI
         public void Open()
         {
             selectedIdx = -1;
-            pendingEquip = false;
             pendingItemId = "";
             HidePicker();
             Refresh();
@@ -114,8 +109,6 @@ namespace PokeProfessions.UI
             detail.text = selectedIdx >= 0 && selectedIdx < s.party.Count
                 ? DetailText(s.party[selectedIdx])
                 : "Select a creature.";
-
-            pendingEquip = false;
         }
 
         void AddRow(string label, System.Action onClick)
@@ -195,8 +188,7 @@ namespace PokeProfessions.UI
             }
 
             // equipment?
-            string[] gear = { "forager_gloves", "miner_pick", "angler_rod", "lure_charm", "scout_band" };
-            foreach (var id in gear)
+            foreach (var id in ItemDB.TrainerGear)
             {
                 if (s.CountItem(id) > 0)
                 {
@@ -209,7 +201,7 @@ namespace PokeProfessions.UI
             }
 
             // creature gear? point at the equip buttons
-            foreach (var id in CreatureGearIds)
+            foreach (var id in AllCreatureGear())
             {
                 if (s.CountItem(id) > 0)
                 {
@@ -263,7 +255,7 @@ namespace PokeProfessions.UI
 
             var s = Game.I.State;
             var c = s.party[selectedIdx];
-            string[] pool = pickingWeapon ? GearWeapons : GearArmors;
+            string[] pool = pickingWeapon ? ItemDB.CreatureWeapons : ItemDB.CreatureArmors;
             string current = pickingWeapon ? c.weapon : c.armor;
 
             AddPickerRow(current != "" ? "Unequip " + ItemDB.Name(current) : "(nothing equipped)",
@@ -328,6 +320,12 @@ namespace PokeProfessions.UI
             pickerCg.alpha = 0f;
             pickerCg.blocksRaycasts = false;
             pickerCg.interactable = false;
+        }
+
+        static System.Collections.Generic.IEnumerable<string> AllCreatureGear()
+        {
+            foreach (var id in ItemDB.CreatureWeapons) yield return id;
+            foreach (var id in ItemDB.CreatureArmors) yield return id;
         }
 
         string BonusLabel(ItemDef d)

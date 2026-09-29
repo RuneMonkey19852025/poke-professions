@@ -289,4 +289,23 @@ namespace PokeProfessions.World
             if (UiRouter.I != null) UiRouter.I.TalkTo(npcId);
         }
     }
+
+    /// <summary>
+    /// The Lucky Snorlax — a slot machine in Emberpost. Press E to play:
+    /// 25c a spin, pays coins and crafting materials.
+    /// </summary>
+    public class SlotsInteractable : Interactable
+    {
+        void Awake()
+        {
+            interactLabel = "Lucky Snorlax  [slots]";
+        }
+
+        public override string Prompt() { return interactLabel; }
+
+        public override void Interact(GameObject player)
+        {
+            if (UiRouter.I != null) UiRouter.I.OpenSlots();
+        }
+    }
 }

@@ -26,6 +26,8 @@ no external assets, no network, no API keys.
 | Mouse wheel | Zoom |
 | E | Interact / advance dialogue |
 | Y / N | Answer dialogue choices |
+| I | Bag (browse & use items) |
+| G | Gear (trainer & creature equipment) |
 | J | Journal (quests, professions, bestiary) |
 | C | Creatures (party, items, equip, rest) |
 | F5 | Save (also autosaves every 25s) |
@@ -45,6 +47,9 @@ no external assets, no network, no API keys.
 - **Battles** — Turn-based: FIGHT / BAG / SWITCH / RUN. 12 elements with full
   effectiveness chart, STAB bonus, statuses (burn/poison/sleep/paralysis), buffs,
   draining moves. Enemies level with their zone.
+- **The Lucky Snorlax** — slot machine by the Vale Post stall in Emberpost,
+  25c a spin. Wins pay coins and drop crafting materials; triple stars pay
+  500c and a Moonshard.
 - **Story** — 3 acts, 8 quests. See walkthrough below.
 
 ## Quest walkthrough (spoilers)
@@ -69,7 +74,7 @@ no external assets, no network, no API keys.
 ```
 Assets/Scripts/Core/      data + systems (DBs, battle, quests, professions, save)
 Assets/Scripts/Story/     the authored narrative (quests, dialogue, trainers, shops)
-Assets/Scripts/World/     terrain, player, camera, interactables, encounter logic
+Assets/Scripts/World/     terrain, player, camera, interactables, slots machine
 Assets/Scripts/UI/        all panels (built in code via UIFactory)
 Assets/Scripts/Audio/     procedural SFX synthesizer
 Assets/Shaders/           vertex-color terrain shader
