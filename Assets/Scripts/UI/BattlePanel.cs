@@ -270,9 +270,9 @@ namespace PokeProfessions.UI
             }
         }
 
-        void MenuButton(string label, Vector2 anchor, Vector2 size, System.Action onClick, int size15 = 15)
+        Button MenuButton(string label, Vector2 anchor, Vector2 size, System.Action onClick, int size15 = 15)
         {
-            UIFactory.Button(menuBox, "btn_" + label, label, anchor, size, onClick, size15);
+            return UIFactory.Button(menuBox, "btn_" + label, label, anchor, size, onClick, size15);
         }
 
         void ShowMenu()
@@ -289,8 +289,11 @@ namespace PokeProfessions.UI
         {
             ClearMenu();
             var pm = engine.PlayerMon;
+            var save = Game.I.State;
             if (pm == null) return;
 
+            // four regular moves (left column + top right)
+            int row = 0;
             for (int i = 0; i < pm.moves.Count && i < 4; i++)
             {
                 string moveId = pm.moves[i];
@@ -301,6 +304,33 @@ namespace PokeProfessions.UI
                 Vector2 anchor = new Vector2(i % 2 == 0 ? 0.3f : 0.72f, i < 2 ? 0.72f : 0.3f);
                 MenuButton(label, anchor, new Vector2(215, 42), () => OnMove(moveId), 14);
             }
+
+            // mastery techniques (right column, under the second move):
+            // unlocked by weapon/armor mastery of the gear this creature wears
+            var active = new List<(string id, string note)>();
+            foreach (var t in WeaponMastery.Techniques)
+            {
+                var wc = WeaponMastery.ClassOfTechnique(t.moveId);
+                int lvl = WeaponMastery.Level(save, wc);
+                if (lvl < t.unlockLevel) continue;
+                if (WeaponMastery.ClassOf(pm.weapon) != wc && WeaponMastery.ClassOf(pm.armor) != wc) continue;
+                int ppLeft = WeaponMastery.TechPP(save, wc, t.moveId);
+                var mv = MoveDB.Get(t.moveId);
+                string name = mv != null ? mv.name : t.moveId;
+                active.Add((t.moveId, name + "  " + ppLeft + "/" + t.basePP + "  [" + WeaponMastery.Name(wc) + " Lv" + lvl + "]"));
+            }
+            for (int i = 0; i < active.Count && i < 2; i++)
+            {
+                var (id, note) = active[i];
+                bool usable = WeaponMastery.TechPP(save, WeaponMastery.ClassOfTechnique(id), id) > 0;
+                var btn = MenuButton(note, new Vector2(0.72f, i == 0 ? 0.08f : -0.08f), new Vector2(215, 42),
+                    usable ? (System.Action)(() => OnMove(id)) : null, 12);
+                var lbl = btn != null ? btn.GetComponentInChildren<Text>() : null;
+                if (lbl != null && !usable) lbl.color = UiTheme.TextDim;
+            }
+            if (active.Count > 2)
+                OnLog("More techniques ready than fit on the wheel — master faster classes first.");
+
             MenuButton("BACK", new Vector2(0.5f, 0.05f), new Vector2(120, 30), ShowMenu, 13);
         }
 

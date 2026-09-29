@@ -21,6 +21,28 @@ namespace PokeProfessions.Core
         public int ActiveEnemyIdx;
         public BattleResult Result = BattleResult.Ongoing;
 
+        /// <summary>Mastery technique usable right now by this creature? (player side only)</summary>
+        public static bool IsTechniqueAvailable(GameState save, Creature c, string moveId)
+        {
+            if (save == null || c == null || c.curHP <= 0) return false;
+            if (!PlayerTeamStatic.Contains(c)) return false;
+            var wc = WeaponMastery.ClassOfTechnique(moveId);
+            if (wc == WeaponClass.None) return false;
+            // the technique's class must be the weapon or armor actually worn
+            if (WeaponMastery.ClassOf(c.weapon) != wc && WeaponMastery.ClassOf(c.armor) != wc) return false;
+            if (WeaponMastery.Level(save, wc) < UnlockLevel(moveId)) return false;
+            return WeaponMastery.TechPP(save, wc, moveId) > 0;
+        }
+
+        static int UnlockLevel(string moveId)
+        {
+            foreach (var t in WeaponMastery.Techniques)
+                if (t.moveId == moveId) return t.unlockLevel;
+            return int.MaxValue;
+        }
+
+        static readonly List<Creature> PlayerTeamStatic = new List<Creature>();
+
         public event Action<string> Log;
         public event Action<string> SfxRequest;
         public event Action<Creature> Evolved;
@@ -38,6 +60,10 @@ namespace PokeProfessions.Core
             Trainer = trainer;
             InitPP(PlayerTeam);
             InitPP(EnemyTeam);
+
+            // techniques read team membership; keep a static snapshot in sync
+            PlayerTeamStatic.Clear();
+            foreach (var c in PlayerTeam) if (c != null) PlayerTeamStatic.Add(c);
         }
 
         GameState saveState; // for weapon mastery lookups (set by BattlePanel/Game)
@@ -99,6 +125,11 @@ namespace PokeProfessions.Core
 
             var playerMove = MoveDB.Get(moveId);
             if (playerMove == null) playerMove = MoveDB.Get("tackle");
+
+            // technique: spend its class's PP instead of the creature's move PP
+            bool isTech = WeaponMastery.ClassOfTechnique(moveId) != WeaponClass.None;
+            if (isTech && saveState != null)
+                WeaponMastery.SpendTechPP(saveState, moveId);
             var enemyMove = MoveDB.Get(EnemyChooseMove(em));
             if (enemyMove == null) enemyMove = MoveDB.Get("tackle");
 
@@ -289,6 +320,11 @@ namespace PokeProfessions.Core
                 case "debuff_def":
                     defBuffs[def.uid] = Mathf.Max(-3, DefBuff(def) - 1);
                     Emit(def.DisplayName + "'s defense fell!");
+                    break;
+                case "buff_atk_def": // Aegis Guard: the armor's poise sharpens both
+                    atkBuffs[atk.uid] = Mathf.Min(3, AtkBuff(atk) + 1);
+                    defBuffs[atk.uid] = Mathf.Min(3, DefBuff(atk) + 1);
+                    Emit(atk.DisplayName + " braces — attack and defense rose!");
                     break;
                 case "heal":
                     int heal = Mathf.Max(1, atk.MaxHP / 3);
@@ -516,7 +552,13 @@ namespace PokeProfessions.Core
             }
             if (best == null) return "tackle";
             if (UnityEngine.Random.value < 0.25f)
-                return em.moves[UnityEngine.Random.Range(0, em.moves.Count)];
+            {
+                // 25% wildcard: any move with PP left
+                var withPP = new List<string>();
+                foreach (var id in em.moves)
+                    if (em.CurrentPP(id) > 0 && MoveDB.Get(id) != null) withPP.Add(id);
+                if (withPP.Count > 0) return withPP[UnityEngine.Random.Range(0, withPP.Count)];
+            }
             return best;
         }
 

@@ -50,6 +50,14 @@ namespace PokeProfessions.Core
             M("mudsling", "Mud Sling", Element.Stone, 24, 100, 20, "Wet, heavy earth.", "");
             M("singsong", "Singsong", Element.Normal, 0, 80, 10, "A drowsy tune.", "status", "sleep", 100);
             M("fume", "Cinder Fume", Element.Ember, 26, 100, 20, "Acrid smoky breath.", "status", "burn", 20);
+
+            // ---- mastery techniques (unlocked by weapon/armor mastery levels) ----
+            M("mt_rend", "Rend", Element.Beast, 42, 95, 5, "Claws that remember every hunt.", "");
+            M("mt_inferno", "Inferno Rush", Element.Ember, 58, 90, 4, "A fang-fueled blaze.", "status", "burn", 30);
+            M("mt_tempest", "Tempest Spine", Element.Volt, 70, 85, 3, "Lightning rides the spine's filament.", "");
+            M("mt_bulwarkslam", "Bulwark Slam", Element.Stone, 40, 95, 5, "A armored slam that steals breath.", "status", "paralyze", 20);
+            M("mt_gracewind", "Gracewind", Element.Gale, 34, 100, 5, "Fast as charm-light, always striking first.", "");
+            M("mt_aegis", "Aegis Guard", Element.Stone, 0, 0, 4, "Armor-forged poise: raises ATK and DEF.", "buff_atk_def", "", 0);
         }
 
         static void M(string id, string name, Element el, int pow, int acc, int pp, string desc,

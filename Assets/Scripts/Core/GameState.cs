@@ -27,6 +27,9 @@ namespace PokeProfessions.Core
         public int[] weaponLevels = new int[5];
         public int[] weaponXp = new int[5];
 
+        // mastery technique PP, per class (not serialized — refills on load)
+        [NonSerialized] public Dictionary<string, int> techPP = new Dictionary<string, int>();
+
         public int ProfLevel(ProfessionId p) { return profLevels[(int)p]; }
         public int ProfXp(ProfessionId p) { return profXp[(int)p]; }
         public void SetProfLevel(ProfessionId p, int v) { profLevels[(int)p] = v; }
@@ -167,6 +170,9 @@ namespace PokeProfessions.Core
                 c.statusTurns = 0;
                 foreach (var m in c.moves) c.SetPP(m, CurrentMovePP(m, c));
             }
+            // techniques are per-class resources: a full heal refills them all
+            foreach (var t in WeaponMastery.Techniques)
+                WeaponMastery.RestoreTechPP(this, t.moveId);
         }
 
         static int CurrentMovePP(string moveId, Creature c)

@@ -202,7 +202,9 @@ namespace PokeProfessions.UI
                 detail.text = "Select a creature, then equip a weapon or armor from your bag.\n" +
                               "Swapped gear returns to the bag automatically.\n" +
                               "KOs with a weapon raise its class's mastery (max +60% ATK);\n" +
-                              "victories in armor raise armor mastery (max −50% dmg taken).";
+                              "victories in armor raise armor mastery (max −50% dmg taken).\n" +
+                              "High mastery unlocks battle TECHNIQUES (Rend Lv5, Inferno Rush Lv20,\n" +
+                              "Tempest Spine Lv45, Bulwark Slam Lv8, Gracewind Lv20, Aegis Guard Lv40).";
             }
         }
 

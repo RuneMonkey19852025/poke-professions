@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using PokeProfessions.UI;
 
@@ -19,6 +20,55 @@ namespace PokeProfessions.Core
         public const int XpPerKO = 8;                 // weapon XP: KO with the class equipped
         public const float DefReducePerLevel = 0.005f; // −0.5% damage taken per level → −50% at Lv100
         public const int ArmorXpPerWin = 6;           // armor XP: victory while wearing the class
+
+        // ---- mastery techniques: moves unlocked at class levels ----
+        // (moveId, unlockLevel, basePP). Techniques draw from per-class PP
+        // pools stored on the save, refilled at any heal (heal items, rest).
+        public struct Technique
+        {
+            public string moveId;
+            public int unlockLevel;
+            public int basePP;
+            public Technique(string id, int lvl, int pp) { moveId = id; unlockLevel = lvl; basePP = pp; }
+        }
+
+        public static readonly Technique[] Techniques =
+        {
+            // weapons
+            new Technique("mt_rend",         5,  5),   // Claws
+            new Technique("mt_inferno",     20, 4),   // Fangs
+            new Technique("mt_tempest",     45, 3),   // Spines
+            // armor
+            new Technique("mt_bulwarkslam", 8,  5),   // Plates
+            new Technique("mt_gracewind",   20, 5),   // Charms
+            new Technique("mt_aegis",       40, 4),   // Plates capstone
+        };
+
+        /// <summary>Techniques unlocked for a class at its current level.</summary>
+        public static List<Technique> Unlocked(WeaponClass wc, int classLevel)
+        {
+            var res = new List<Technique>();
+            foreach (var t in Techniques)
+            {
+                if (ClassOfTechnique(t.moveId) != wc) continue;
+                if (classLevel >= t.unlockLevel) res.Add(t);
+            }
+            return res;
+        }
+
+        public static WeaponClass ClassOfTechnique(string moveId)
+        {
+            switch (moveId)
+            {
+                case "mt_rend": return WeaponClass.Claws;
+                case "mt_inferno": return WeaponClass.Fangs;
+                case "mt_tempest": return WeaponClass.Spines;
+                case "mt_bulwarkslam": return WeaponClass.Plates;
+                case "mt_gracewind": return WeaponClass.Charms;
+                case "mt_aegis": return WeaponClass.Plates;
+                default: return WeaponClass.None;
+            }
+        }
 
         static readonly string[] Names = { "Claws", "Fangs", "Spines", "Plates", "Charms" };
 
@@ -61,6 +111,35 @@ namespace PokeProfessions.Core
             if (save == null || (int)wc < 0) return 1f;
             int lvl = save.weaponLevels[(int)wc];
             return Mathf.Max(0.5f, 1f - DefReducePerLevel * lvl);
+        }
+
+        // ---------------- technique PP (per class, stored on the save) ----------------
+
+        /// <summary>Current technique PP for a class (full by default).</summary>
+        public static int TechPP(GameState save, WeaponClass wc, string moveId)
+        {
+            if (save == null || (int)wc < 0) return 0;
+            if (save.techPP.TryGetValue(moveId, out int v)) return v;
+            return BasePP(moveId);
+        }
+
+        public static void SpendTechPP(GameState save, string moveId)
+        {
+            if (save == null) return;
+            save.techPP[moveId] = Mathf.Max(0, TechPP(save, ClassOfTechnique(moveId), moveId) - 1);
+        }
+
+        public static void RestoreTechPP(GameState save, string moveId)
+        {
+            if (save == null) return;
+            save.techPP[moveId] = BasePP(moveId);
+        }
+
+        public static int BasePP(string moveId)
+        {
+            foreach (var t in Techniques)
+                if (t.moveId == moveId) return t.basePP;
+            return 3;
         }
 
         /// <summary>Percent reduction (0..50) an armor class grants, for UI.</summary>
