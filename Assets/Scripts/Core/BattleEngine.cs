@@ -558,6 +558,7 @@ namespace PokeProfessions.Core
                 foreach (var id in em.moves)
                     if (em.CurrentPP(id) > 0 && MoveDB.Get(id) != null) withPP.Add(id);
                 if (withPP.Count > 0) return withPP[UnityEngine.Random.Range(0, withPP.Count)];
+            // enemies don't use mastery techniques (those belong to the player's gear)
             }
             return best;
         }
