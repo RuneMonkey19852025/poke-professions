@@ -161,6 +161,15 @@ namespace PokeProfessions.Core
               "Digs counting-holes: one for every coin it finds.",
               "grottolord", 36, new[] { "scratch", "mudsling", "bulwark", "pebble", "landslide", "harden" },
               "#A88F6C", "#6E5A40", "quad", 1.15f, 50, 44, "meadow");
+
+            S("thumper", "Thumper", Element.Beast, 12, 13, 9, 12,
+              "Its ears pick up buried seeds three fields away.",
+              "boulderhare", 16, new[] { "tackle", "gnaw", "growl", "mudsling", "ravage", "bodyslam" },
+              "#D8B890", "#8A6848", "quad", 0.95f, 68, 21, "meadow");
+            S("boulderhare", "Boulderhare", Element.Beast, 18, 20, 13, 16,
+              "It kicks boulders for practice and grudges.",
+              "", 0, new[] { "gnaw", "ravage", "mudsling", "bodyslam", "focus", "bulwark" },
+              "#C4A276", "#6E5438", "quad", 1.25f, 44, 46, "meadow");
             S("grottolord", "Grottolord", Element.Stone, 27, 21, 27, 11,
               "Its burrow is a bank. Its patience, a vault door.",
               "", 0, new[] { "mudsling", "bulwark", "landslide", "harden", "pebble", "bodyslam" },
@@ -187,6 +196,19 @@ namespace PokeProfessions.Core
               "Its purr is a low banked fire.",
               "pyrelynx_king", 38, new[] { "emberbit", "fume", "flurrena", "flashstep", "focus", "scratch" },
               "#A04840", "#5C2622", "quad", 1.3f, 40, 50, "ridge");
+
+            S("sparkit", "Sparkit", Element.Volt, 12, 12, 9, 14,
+              "Static clings to its fur like a second coat.",
+              "voltfang", 18, new[] { "spark", "flashstep", "growl", "mudsling", "arc", "focus" },
+              "#E8D05A", "#8C7A20", "quad", 0.95f, 58, 26, "ridge");
+            S("voltfang", "Voltfang", Element.Volt, 18, 19, 13, 20,
+              "Its bite carries a warning label.",
+              "fulgurox", 34, new[] { "spark", "arc", "flashstep", "focus", "bodyslam", "cyclone" },
+              "#D8C048", "#786818", "quad", 1.25f, 40, 52, "ridge");
+            S("fulgurox", "Fulgurox", Element.Volt, 24, 26, 18, 22,
+              "When it howls, the ridge answers in thunder.",
+              "", 0, new[] { "arc", "flashstep", "focus", "cyclone", "bodyslam", "gnaw" },
+              "#C8B038", "#685810", "quad", 1.55f, 30, 68, "ridge");
             S("pyrelynx_king", "Emberlynx", Element.Ember, 27, 28, 19, 24,
               "Its whiskers are lit fuses. It is always calm about it.",
               "", 0, new[] { "fume", "flurrena", "flashstep", "focus", "scratch", "cinder" },
@@ -213,6 +235,15 @@ namespace PokeProfessions.Core
               "It blooms once a year, magnificently, then naps.",
               "lilycrown", 38, new[] { "leafdart", "leech", "springshoot", "mend", "briar", "soothe" },
               "#68A85A", "#3A6A32", "aquatic", 1.3f, 45, 48, "lake");
+
+            S("frostfin", "Frostfin", Element.Frost, 12, 11, 10, 12,
+              "Schools of it turn the shallows to slush.",
+              "rimefin", 18, new[] { "frostbite", "douse", "growl", "gust", "soothe", "bodyslam" },
+              "#A8D8E8", "#4A88A0", "aquatic", 0.95f, 62, 23, "lake");
+            S("rimefin", "Rimefin", Element.Frost, 18, 16, 15, 17,
+              "Its wake freezes into lace across the water.",
+              "", 0, new[] { "frostbite", "glacier", "douse", "soothe", "cyclone", "bodyslam" },
+              "#8CC8DC", "#3A7288", "aquatic", 1.3f, 42, 47, "lake");
             S("lilycrown", "Lilycrown", Element.Verdant, 28, 20, 26, 14,
               "Its flower court opens in ceremony at first light.",
               "", 0, new[] { "leech", "springshoot", "mend", "briar", "soothe", "leafdart" },
@@ -251,6 +282,24 @@ namespace PokeProfessions.Core
               "The Hollow's own shadow, walking politely abroad.",
               "eclipse", 42, new[] { "shadeslip", "nightfall", "lullaby", "ravage", "mindnip", "focus" },
               "#564873", "#2A2240", "quad", 1.3f, 40, 54, "hollow");
+
+            S("duskstalker", "Duskstalker", Element.Beast, 13, 15, 9, 14,
+              "You hear the paws. You never see the paws.",
+              "nightmaw", 22, new[] { "gnaw", "flashstep", "growl", "nightfall", "ravage", "focus" },
+              "#8A6A4A", "#4A3428", "quad", 1f, 58, 26, "hollow");
+            S("nightmaw", "Nightmaw", Element.Beast, 19, 22, 13, 19,
+              "Its yawn is the last thing the dark says.",
+              "", 0, new[] { "ravage", "gnaw", "flashstep", "nightfall", "focus", "bodyslam" },
+              "#6E5238", "#382818", "quad", 1.35f, 40, 52, "hollow");
+
+            S("blightwing", "Blightwing", Element.Toxic, 12, 11, 10, 13,
+              "A moth whose dust is best left unsniffed.",
+              "miasmoth", 20, new[] { "venomspit", "gust", "lullaby", "leech", "miasma", "growl" },
+              "#7A9A50", "#3E5A2A", "bug", 0.95f, 60, 24, "hollow");
+            S("miasmoth", "Miasmoth", Element.Toxic, 18, 16, 14, 18,
+              "Its wingbeat spreads a green summer storm.",
+              "", 0, new[] { "miasma", "venomspit", "leech", "gust", "cyclone", "lullaby" },
+              "#688A42", "#2E4A1E", "bug", 1.3f, 42, 50, "hollow");
             S("eclipse", "Eclipse", Element.Shade, 29, 29, 20, 26,
               "The moon borrows its smile on dark nights.",
               "", 0, new[] { "nightfall", "lullaby", "ravage", "mindnip", "focus", "shadeslip" },
