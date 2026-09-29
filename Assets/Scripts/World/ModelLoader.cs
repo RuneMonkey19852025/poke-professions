@@ -100,21 +100,21 @@ namespace PokeProfessions.World
             { "gildra",      "MantisHatchery/sloth/sloth" },
         };
 
-        // NPC id -> KayKit adventurer
+        // NPC id -> Kenney Blocky Character (chibi, 26 embedded clips each)
         static readonly Dictionary<string, string> NpcModel = new Dictionary<string, string>
         {
-            { "maren",  "KayKitAdventurers/Characters/fbx/Ranger" },
-            { "pell",   "KayKitAdventurers/Characters/fbx/Mage" },
-            { "mira",   "KayKitAdventurers/Characters/fbx/Rogue_Hooded" },
-            { "juna",   "KayKitAdventurers/Characters/fbx/Rogue" },
-            { "brann",  "KayKitAdventurers/Characters/fbx/Barbarian" },
-            { "odessa", "KayKitAdventurers/Characters/fbx/Knight" },
-            { "tobin",  "KayKitAdventurers/Characters/fbx/Barbarian" },
-            { "sela",   "KayKitAdventurers/Characters/fbx/Mage" },
-            { "korrin", "KayKitAdventurers/Characters/fbx/Knight" },
-            { "vesna",  "KayKitAdventurers/Characters/fbx/Rogue_Hooded" },
-            { "hollis", "KayKitAdventurers/Characters/fbx/Ranger" },
-            { "zephy",  "KayKitAdventurers/Characters/fbx/Rogue_Hooded" },
+            { "maren",  "KenneyBlocky/character-d" },   // farmer overalls
+            { "pell",   "KenneyBlocky/character-h" },   // grey elder
+            { "mira",   "KenneyBlocky/character-i" },   // light blue
+            { "juna",   "KenneyBlocky/character-e" },   // purple
+            { "brann",  "KenneyBlocky/character-c" },   // smith red
+            { "odessa", "KenneyBlocky/character-g" },   // captain
+            { "tobin",  "KenneyBlocky/character-j" },   // rival
+            { "sela",   "KenneyBlocky/character-f" },   // herbalist
+            { "korrin", "KenneyBlocky/character-k" },
+            { "vesna",  "KenneyBlocky/character-l" },
+            { "hollis", "KenneyBlocky/character-m" },
+            { "zephy",  "KenneyBlocky/character-n" },
         };
 
         static readonly Dictionary<string, GameObject> cache = new Dictionary<string, GameObject>();
@@ -229,6 +229,7 @@ namespace PokeProfessions.World
         {
             if (string.IsNullOrEmpty(resourcePath)) return ModelStyle.Creature;
             if (resourcePath.StartsWith("KayKit")) return ModelStyle.Human;
+            if (resourcePath.StartsWith("KenneyBlocky")) return ModelStyle.Human;
             if (resourcePath.StartsWith("Mantis")) return ModelStyle.Boss;
             return ModelStyle.Creature;
         }
