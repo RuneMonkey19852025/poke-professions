@@ -70,9 +70,14 @@ namespace PokeProfessions.Core
                 var parts = line.teach.Split(':');
                 if (parts.Length == 2 && Enum.TryParse(parts[0], out ProfessionId p) && int.TryParse(parts[1], out int lv))
                 {
-                    int target = Math.Min(state.ProfLevel(p) + lv, ProfessionSystem.MaxLevel);
-                    state.SetProfLevel(p, target);
-                    Toast.Push(ProfessionSystem.Name(p) + " raised to level " + target);
+                    // teach = "Prof:level" — raise the trade TO that level
+                    // (story lessons certify competence; skills already start at 1)
+                    int target = Math.Clamp(lv, 1, ProfessionSystem.MaxLevel);
+                    if (state.ProfLevel(p) < target)
+                    {
+                        state.SetProfLevel(p, target);
+                        Toast.Push(ProfessionSystem.Name(p) + " trained to level " + target);
+                    }
                 }
             }
 

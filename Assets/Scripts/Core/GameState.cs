@@ -17,7 +17,8 @@ namespace PokeProfessions.Core
         public int playSeconds;
 
         // ---- professions ----
-        public int[] profLevels = new int[6];
+        // every trade skill starts at level 1 (basics are common knowledge)
+        public int[] profLevels = new int[6] { 1, 1, 1, 1, 1, 1 };
         public int[] profXp = new int[6];
 
         public int ProfLevel(ProfessionId p) { return profLevels[(int)p]; }
@@ -96,6 +97,10 @@ namespace PokeProfessions.Core
                 var json = PlayerPrefs.GetString(Key);
                 var s = JsonUtility.FromJson<GameState>(json);
                 if (s == null) return null;
+                // trades start at 1: bump saves made before that rule
+                if (s.profLevels != null)
+                    for (int i = 0; i < s.profLevels.Length; i++)
+                        if (s.profLevels[i] < 1) s.profLevels[i] = 1;
                 // rehydrate DB-backed lookups
                 foreach (var c in s.party) if (c != null && c.speciesId != null && CreatureDB.Get(c.speciesId) == null) return null;
                 foreach (var c in s.box) if (c != null && c.speciesId != null && CreatureDB.Get(c.speciesId) == null) return null;
