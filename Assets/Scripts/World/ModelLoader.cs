@@ -24,12 +24,12 @@ namespace PokeProfessions.World
         // gameplay state -> clip keywords (first match wins)
         static readonly Dictionary<string, string[]> ClipKeywords = new Dictionary<string, string[]>
         {
-            { "idle",   new[] { "idle" } },
+            { "idle",   new[] { "idle", "static" } },
             { "walk",   new[] { "walk" } },
-            { "run",    new[] { "run" } },
-            { "attack", new[] { "attack", "bite", "sting", "swipe" } },
+            { "run",    new[] { "run", "sprint" } },
+            { "attack", new[] { "attack_melee", "melee_attack", "attack", "1h_melee", "2h_melee", "bite", "sting", "swipe", "slash" } },
             { "hit",    new[] { "hitrecieve", "hit", "stagger", "alerted" } },
-            { "death",  new[] { "death", "die" } },
+            { "death",  new[] { "death_a", "death", "die" } },
         };
 
         // Mantis packs ship one animation per FBX; map states to file names
@@ -103,18 +103,18 @@ namespace PokeProfessions.World
         // NPC id -> Kenney Blocky Character (chibi, 26 embedded clips each)
         static readonly Dictionary<string, string> NpcModel = new Dictionary<string, string>
         {
-            { "maren",  "KenneyBlocky/character-d" },   // farmer overalls
-            { "pell",   "KenneyBlocky/character-h" },   // grey elder
-            { "mira",   "KenneyBlocky/character-i" },   // light blue
-            { "juna",   "KenneyBlocky/character-e" },   // purple
-            { "brann",  "KenneyBlocky/character-c" },   // smith red
-            { "odessa", "KenneyBlocky/character-g" },   // captain
-            { "tobin",  "KenneyBlocky/character-j" },   // rival
-            { "sela",   "KenneyBlocky/character-f" },   // herbalist
-            { "korrin", "KenneyBlocky/character-k" },
-            { "vesna",  "KenneyBlocky/character-l" },
-            { "hollis", "KenneyBlocky/character-m" },
-            { "zephy",  "KenneyBlocky/character-n" },
+            { "maren",  "KayKitAdventurers/Characters/fbx/Ranger" },   // farmer overalls
+            { "pell",   "KayKitAdventurers/Characters/fbx/Mage" },   // grey elder
+            { "mira",   "KayKitAdventurers/Characters/fbx/Rogue_Hooded" },   // light blue
+            { "juna",   "KayKitAdventurers/Characters/fbx/Rogue" },   // purple
+            { "brann",  "KayKitAdventurers/Characters/fbx/Barbarian" },   // smith red
+            { "odessa", "KayKitAdventurers/Characters/fbx/Knight" },   // captain
+            { "tobin",  "KayKitAdventurers/Characters/fbx/Barbarian" },   // rival
+            { "sela",   "KayKitAdventurers/Characters/fbx/Mage" },   // herbalist
+            { "korrin", "KayKitSkeletons/Skeleton_Warrior" },
+            { "vesna",  "KayKitSkeletons/Skeleton_Minion" },
+            { "hollis", "KayKitSkeletons/Skeleton_Rogue" },
+            { "zephy",  "KayKitSkeletons/Skeleton_Mage" },
         };
 
         static readonly Dictionary<string, GameObject> cache = new Dictionary<string, GameObject>();
@@ -223,10 +223,10 @@ namespace PokeProfessions.World
         /// Silent when everything loads; warns loudly when they don't.</summary>
         public static void Diag()
         {
-            var kb = Resources.Load<GameObject>(Normalize("KenneyBlocky/character-a"));
             var kk = Resources.Load<GameObject>(Normalize("KayKitAdventurers/Characters/fbx/Ranger"));
-            if (kb == null || kk == null)
-                Debug.LogWarning("[ModelDiag] KB=" + (kb != null) + " KK=" + (kk != null) +
+            var sk = Resources.Load<GameObject>(Normalize("KayKitSkeletons/Skeleton_Warrior"));
+            if (kk == null || sk == null)
+                Debug.LogWarning("[ModelDiag] KK=" + (kk != null) + " SK=" + (sk != null) +
                                  " — model packs not fully available; some visuals will fall back");
         }
 
@@ -253,7 +253,6 @@ namespace PokeProfessions.World
         {
             if (string.IsNullOrEmpty(resourcePath)) return ModelStyle.Creature;
             if (resourcePath.StartsWith("KayKit")) return ModelStyle.Human;
-            if (resourcePath.StartsWith("KenneyBlocky")) return ModelStyle.Human;
             if (resourcePath.StartsWith("Mantis")) return ModelStyle.Boss;
             return ModelStyle.Creature;
         }

@@ -70,8 +70,8 @@ namespace PokeProfessions.World
             pf.AddComponent<PlayerController>();
             pf.transform.position = new Vector3(State.playerX, WorldBuilder.GroundHeight(State.playerX, State.playerZ) + 0.6f, State.playerZ);
 
-            // Prefer a Kenney blocky chibi as the player body.
-            var playerModel = ModelLoader.Instantiate("KenneyBlocky/character-a", pf.transform, 1f);
+            // Prefer a KayKit chibi adventurer as the player body.
+            var playerModel = ModelLoader.Instantiate("KayKitAdventurers/Characters/fbx/Ranger", pf.transform, 1f);
             if (playerModel != null)
             {
                 playerModel.transform.localPosition = Vector3.zero;
