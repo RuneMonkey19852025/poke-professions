@@ -203,13 +203,13 @@ namespace PokeProfessions.World
             string zone = State.curZone;
             if (zone == "hollow_deep") return; // story area: no random fights
 
-            float chance = Time.deltaTime * 0.045f;
+            float chance = Time.deltaTime * 0.09f; // ~10s average between wilds while walking
             string eq = State.equippedItem;
             if (eq == "lure_charm") chance *= 1.25f;
 
             if (UnityEngine.Random.value < chance)
             {
-                encounterCooldown = 4f;
+                encounterCooldown = 3.5f;
                 var wild = MonsterFactory.CreateWildForZone(zone, State);
                 if (wild == null) return;
 
