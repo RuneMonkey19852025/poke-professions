@@ -127,9 +127,13 @@ namespace PokeProfessions.UI
                 if (wc == WeaponClass.None) continue;
                 int lvl = WeaponMastery.Level(s, wc);
                 int need = WeaponMastery.XpToNext(lvl);
+                bool isArmor = wc == WeaponClass.Plates || wc == WeaponClass.Charms;
+                string effect = isArmor
+                    ? "−" + WeaponMastery.DefenseReducePercent(s, wc) + "% dmg taken"
+                    : "+" + Mathf.RoundToInt((WeaponMastery.AttackMultiplier(s, wc) - 1f) * 100f) + "% ATK";
                 sb.AppendLine(WeaponMastery.Name(wc) + ": Lv" + lvl +
                     (lvl >= WeaponMastery.MaxLevel ? " MAX" : "  (" + WeaponMastery.Xp(s, wc) + "/" + need + ")") +
-                    "  +" + Mathf.RoundToInt((WeaponMastery.AttackMultiplier(s, wc) - 1f) * 100f) + "% ATK");
+                    "  " + effect);
             }
             return sb.ToString();
         }

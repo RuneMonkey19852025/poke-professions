@@ -41,6 +41,10 @@ no external assets, no network, no API keys.
 - **Crafting** — Forge / Campfire / Workbench / anywhere-recipes. Craft capture
   cores (Timber → Ironbound → Moonlit), healing food, and profession gear
   (gloves, pick, rod, lure charm, scout band).
+- **Weapon mastery** — KOs with an equipped weapon level its class (claws,
+  fangs, spines: +6% ATK/level, max +60%); victories while wearing armor level
+  its class (plates, charms: −5% damage taken/level, max −50%). See the Gear
+  panel and the journal.
 - **Taming** — Fight wild creatures in zones (meadow lv2-6, ridge lv8-12, lake
   lv6-10, hollow lv10-14, deep hollow lv14-18). Weaken them, then BAG → throw a
   core. Caught creatures join your party (6) or box.

@@ -256,8 +256,13 @@ namespace PokeProfessions.Core
             if (saveState != null && PlayerTeam != null && PlayerTeam.Contains(atk))
                 mastery = WeaponMastery.AttackMultiplier(saveState, WeaponMastery.ClassOf(atk.weapon));
 
+            // armor mastery: the defender's equipped armor class takes less damage
+            float armor = 1f;
+            if (saveState != null && PlayerTeam != null && PlayerTeam.Contains(def))
+                armor = WeaponMastery.DefenseMultiplier(saveState, WeaponMastery.ClassOf(def.armor));
+
             float dmg = ((2f * atk.level / 5f + 2f) * mv.power * atkStat / defStat) / 50f + 2f;
-            dmg *= eff * stab * variance * mastery;
+            dmg *= eff * stab * variance * mastery * armor;
 
             string label = TypeChart.Label(eff);
             if (!string.IsNullOrEmpty(label)) Emit(label);
@@ -444,6 +449,15 @@ namespace PokeProfessions.Core
 
             foreach (var p in state.party)
                 if (p != null && p.curHP > 0) GainXp(p, xpGain);
+
+            // armor mastery: every survivor wearing armor trains its class on victory
+            foreach (var p in state.party)
+            {
+                if (p == null || p.curHP <= 0) continue;
+                var armorClass = WeaponMastery.ClassOf(p.armor);
+                if (armorClass != WeaponClass.None)
+                    WeaponMastery.AddXp(state, armorClass, WeaponMastery.ArmorXpPerWin);
+            }
         }
 
         void GiveItem(GameState state, string give)

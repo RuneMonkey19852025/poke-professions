@@ -182,6 +182,14 @@ namespace PokeProfessions.UI
                     masteryLine = "\n<color=#6FCF97>" + WeaponMastery.Name(wc) + " mastery Lv" + lvl +
                                   " ( weapon attacks +" + pct + "% )</color>";
                 }
+                var ac = WeaponMastery.ClassOf(c.armor);
+                if (ac != WeaponClass.None)
+                {
+                    int alvl = WeaponMastery.Level(s, ac);
+                    int red = WeaponMastery.DefenseReducePercent(s, ac);
+                    masteryLine += "\n<color=#56A8F5>" + WeaponMastery.Name(ac) + " mastery Lv" + alvl +
+                                   " ( takes " + red + "% less damage )</color>";
+                }
                 detail.text = "<b>" + c.DisplayName + "</b>  Lv" + c.level + "\n" +
                     "ATK " + c.ATK + "  DEF " + c.DEF + "  SPD " + c.SPD + "  HP " + c.curHP + "/" + c.MaxHP + "\n" +
                     "Weapon: " + (c.weapon != "" ? ItemDB.Name(c.weapon) : "—") +
@@ -193,7 +201,8 @@ namespace PokeProfessions.UI
             {
                 detail.text = "Select a creature, then equip a weapon or armor from your bag.\n" +
                               "Swapped gear returns to the bag automatically.\n" +
-                              "KOs with an equipped weapon raise that class's mastery (max +60% ATK).";
+                              "KOs with a weapon raise its class's mastery (max +60% ATK);\n" +
+                              "victories in armor raise armor mastery (max −50% dmg taken).";
             }
         }
 
