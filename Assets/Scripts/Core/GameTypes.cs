@@ -118,6 +118,8 @@ namespace PokeProfessions.Core
         public int xp;
         public int curHP;
         public List<string> moves = new List<string>();
+        public string weapon = "";   // equipped weapon item id ("" = none)
+        public string armor = "";    // equipped armor item id ("" = none)
         public Dictionary<string, int> movePP = new Dictionary<string, int>();
         public List<MovePPEntry> movePPList = new List<MovePPEntry>(); // serialized mirror (JsonUtility can't do dicts)
         public string status = "";   // "", "poison", "burn", "sleep", "paralyze"
@@ -132,7 +134,7 @@ namespace PokeProfessions.Core
             get
             {
                 var s = Species;
-                return s == null ? 20 : s.baseHP * 2 + level * 4 + 12;
+                return s == null ? 20 : s.baseHP * 2 + level * 4 + 12 + GearHp();
             }
         }
 
@@ -142,6 +144,7 @@ namespace PokeProfessions.Core
             {
                 var s = Species;
                 int v = (s == null ? 8 : s.baseATK) * 2 + level * 2;
+                v += GearAtk();
                 return MathfStatus(v, status == "burn");
             }
         }
@@ -151,7 +154,8 @@ namespace PokeProfessions.Core
             get
             {
                 var s = Species;
-                return (s == null ? 8 : s.baseDEF) * 2 + level * 2;
+                int v = (s == null ? 8 : s.baseDEF) * 2 + level * 2;
+                return v + GearDef();
             }
         }
 
@@ -160,8 +164,37 @@ namespace PokeProfessions.Core
             get
             {
                 var s = Species;
-                return (s == null ? 8 : s.baseSPD) * 2 + level;
+                int v = (s == null ? 8 : s.baseSPD) * 2 + level;
+                return v + GearSpd();
             }
+        }
+
+        // ---------------- creature equipment ----------------
+        // Weapons add ATK (and sometimes SPD), armor adds DEF (and sometimes HP).
+        // Bonuses are flat and small: a lv5 starter gains ~+3-6 from early gear,
+        // meaningful without eclipsing level-ups.
+
+        public int GearAtk() { return SumGear(weapon, "atk+") + SumGear(armor, "atk+"); }
+        public int GearDef() { return SumGear(weapon, "def+") + SumGear(armor, "def+"); }
+        public int GearSpd() { return SumGear(weapon, "spd+") + SumGear(armor, "spd+"); }
+        public int GearHp() { return SumGear(weapon, "hp+") + SumGear(armor, "hp+"); }
+
+        /// <summary>Sum every "prefix+N" segment (e.g. "atk+3|spd+1") on one equipped item.</summary>
+        static int SumGear(string itemId, string prefix)
+        {
+            if (string.IsNullOrEmpty(itemId)) return 0;
+            var d = ItemDB.Get(itemId);
+            if (d == null || string.IsNullOrEmpty(d.equipBonus)) return 0;
+            int sum = 0;
+            foreach (var seg in d.equipBonus.Split('|'))
+            {
+                if (seg.StartsWith(prefix))
+                {
+                    int v;
+                    if (int.TryParse(seg.Substring(prefix.Length), out v)) sum += v;
+                }
+            }
+            return sum;
         }
 
         private static int MathfStatus(int v, bool halved) => halved ? v / 2 : v;

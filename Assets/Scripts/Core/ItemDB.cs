@@ -50,6 +50,16 @@ namespace PokeProfessions.Core
             Add(new ItemDef { id = "lure_charm", name = "Lure Charm", desc = "Equipped: wild encounters are 25% more frequent.", kind = ItemKind.Equipment, basePrice = 80, equipBonus = "lure", iconColorHex = "#D4A5C9", sellable = false });
             Add(new ItemDef { id = "scout_band", name = "Scout Band", desc = "Equipped: wild creatures appear 2 levels weaker.", kind = ItemKind.Equipment, basePrice = 100, equipBonus = "scout", iconColorHex = "#98B4D4", sellable = false });
 
+            // ---------------- Creature gear (weapons & armor) ----------------
+            // equipBonus segments: atk+ / def+ / spd+ / hp+; primary segment first.
+            Add(new ItemDef { id = "gear_claw", name = "Bone Claw", desc = "Creature weapon: +3 ATK.", kind = ItemKind.Equipment, basePrice = 35, equipBonus = "atk+3", iconColorHex = "#E4DCC8", sellable = true });
+            Add(new ItemDef { id = "gear_fang", name = "Ember Fang", desc = "Creature weapon: +6 ATK, +1 SPD. Warm to the tooth.", kind = ItemKind.Equipment, basePrice = 75, equipBonus = "atk+6|spd+1", iconColorHex = "#E07040", sellable = true });
+            Add(new ItemDef { id = "gear_stormspine", name = "Storm Spine", desc = "Creature weapon: +9 ATK, +2 SPD. Forged around a charged filament.", kind = ItemKind.Equipment, basePrice = 150, equipBonus = "atk+9|spd+2", iconColorHex = "#B8D8F0", sellable = true });
+            Add(new ItemDef { id = "gear_band", name = "Traveler's Band", desc = "Creature armor: +2 DEF, +4 HP.", kind = ItemKind.Equipment, basePrice = 30, equipBonus = "def+2|hp+4", iconColorHex = "#C8A878", sellable = true });
+            Add(new ItemDef { id = "gear_hide", name = "Ranger Hide", desc = "Creature armor: +5 DEF, +8 HP.", kind = ItemKind.Equipment, basePrice = 70, equipBonus = "def+5|hp+8", iconColorHex = "#8A9A5B", sellable = true });
+            Add(new ItemDef { id = "gear_plate", name = "Vale Plate", desc = "Creature armor: +9 DEF, +14 HP. Smith-forged shell.", kind = ItemKind.Equipment, basePrice = 140, equipBonus = "def+9|hp+14", iconColorHex = "#A8B0B8", sellable = true });
+            Add(new ItemDef { id = "gear_charm", name = "Zephyr Charm", desc = "Creature armor: +4 SPD. Light as a rumor.", kind = ItemKind.Equipment, basePrice = 90, equipBonus = "spd+4", iconColorHex = "#D8E8F8", sellable = true });
+
             // ---------------- Key items ----------------
             Add(new ItemDef { id = "lantern", name = "Sleeper's Lantern", desc = "Its flame leans toward the Hollow. Story item.", kind = ItemKind.KeyItem, basePrice = 0, sellable = false, iconColorHex = "#F5E6A8" });
             Add(new ItemDef { id = "sigil_piece_a", name = "Sigil Fragment: Root", desc = "One third of the Verdant Sigil.", kind = ItemKind.KeyItem, basePrice = 0, sellable = false, iconColorHex = "#78C850" });
@@ -75,6 +85,15 @@ namespace PokeProfessions.Core
             Recipes.Add(new Recipe { id = "r_rod", resultItemId = "angler_rod", resultCount = 1, profession = ProfessionId.Tailor, requiredLevel = 4, xpReward = 25, station = "workbench", inputs = { new ItemStack { itemId = "rope", count = 2 }, new ItemStack { itemId = "iron_bar", count = 1 }, new ItemStack { itemId = "cloth", count = 1 } } });
             Recipes.Add(new Recipe { id = "r_lure", resultItemId = "lure_charm", resultCount = 1, profession = ProfessionId.Tailor, requiredLevel = 5, xpReward = 30, station = "workbench", inputs = { new ItemStack { itemId = "gildfish", count = 1 }, new ItemStack { itemId = "cloth", count = 2 }, new ItemStack { itemId = "glowcap", count = 1 } } });
             Recipes.Add(new Recipe { id = "r_scout", resultItemId = "scout_band", resultCount = 1, profession = ProfessionId.Tailor, requiredLevel = 5, xpReward = 30, station = "workbench", inputs = { new ItemStack { itemId = "cloth", count = 2 }, new ItemStack { itemId = "iron_bar", count = 1 }, new ItemStack { itemId = "moonshard", count = 1 } } });
+
+            // ---------------- Creature gear recipes ----------------
+            Recipes.Add(new Recipe { id = "r_gear_claw", resultItemId = "gear_claw", resultCount = 1, profession = ProfessionId.Smith, requiredLevel = 1, xpReward = 12, station = "forge", inputs = { new ItemStack { itemId = "copper_bar", count = 1 }, new ItemStack { itemId = "stone", count = 2 } } });
+            Recipes.Add(new Recipe { id = "r_gear_fang", resultItemId = "gear_fang", resultCount = 1, profession = ProfessionId.Smith, requiredLevel = 3, xpReward = 22, station = "forge", inputs = { new ItemStack { itemId = "iron_bar", count = 1 }, new ItemStack { itemId = "emberpepper", count = 2 }, new ItemStack { itemId = "rope", count = 1 } } });
+            Recipes.Add(new Recipe { id = "r_gear_stormspine", resultItemId = "gear_stormspine", resultCount = 1, profession = ProfessionId.Smith, requiredLevel = 6, xpReward = 45, station = "forge", inputs = { new ItemStack { itemId = "iron_bar", count = 2 }, new ItemStack { itemId = "moonshard", count = 1 }, new ItemStack { itemId = "copper_bar", count = 2 } } });
+            Recipes.Add(new Recipe { id = "r_gear_band", resultItemId = "gear_band", resultCount = 1, profession = ProfessionId.Tailor, requiredLevel = 1, xpReward = 10, station = "workbench", inputs = { new ItemStack { itemId = "fiber", count = 3 }, new ItemStack { itemId = "rope", count = 1 } } });
+            Recipes.Add(new Recipe { id = "r_gear_hide", resultItemId = "gear_hide", resultCount = 1, profession = ProfessionId.Tailor, requiredLevel = 3, xpReward = 20, station = "workbench", inputs = { new ItemStack { itemId = "cloth", count = 2 }, new ItemStack { itemId = "rope", count = 1 }, new ItemStack { itemId = "copper_bar", count = 1 } } });
+            Recipes.Add(new Recipe { id = "r_gear_plate", resultItemId = "gear_plate", resultCount = 1, profession = ProfessionId.Smith, requiredLevel = 5, xpReward = 40, station = "forge", inputs = { new ItemStack { itemId = "iron_bar", count = 2 }, new ItemStack { itemId = "cloth", count = 1 }, new ItemStack { itemId = "rope", count = 1 } } });
+            Recipes.Add(new Recipe { id = "r_gear_charm", resultItemId = "gear_charm", resultCount = 1, profession = ProfessionId.Tailor, requiredLevel = 5, xpReward = 35, station = "workbench", inputs = { new ItemStack { itemId = "cloth", count = 1 }, new ItemStack { itemId = "glowcap", count = 2 }, new ItemStack { itemId = "copper_bar", count = 1 } } });
         }
 
         private static void Add(ItemDef d) => All[d.id] = d;

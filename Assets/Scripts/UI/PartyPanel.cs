@@ -18,6 +18,15 @@ namespace PokeProfessions.UI
         bool pendingEquip;
         string pendingItemId = "";
 
+        // ---------------- creature gear picker state ----------------
+        static readonly string[] GearWeapons = { "gear_stormspine", "gear_fang", "gear_claw" };
+        static readonly string[] GearArmors = { "gear_plate", "gear_hide", "gear_charm", "gear_band" };
+        static readonly string[] CreatureGearIds = { "gear_claw", "gear_fang", "gear_stormspine", "gear_band", "gear_hide", "gear_plate", "gear_charm" };
+        bool pickingWeapon;
+        CanvasGroup pickerCg;
+        RectTransform pickerList;
+        readonly List<Button> pickerButtons = new List<Button>();
+
         public static PartyPanel Build(Canvas canvas)
         {
             var go = new GameObject("PartyPanel", typeof(RectTransform), typeof(PartyPanel));
@@ -60,6 +69,15 @@ namespace PokeProfessions.UI
                     Toast.Push("Your creatures rest and recover.");
                     Refresh();
                 }, 14);
+            var eqW = UIFactory.Button(window, "equipW", "Equip weapon…", new Vector2(1, 0), new Vector2(150, 36),
+                () => OpenEquipPicker(true), 14);
+            var eqA = UIFactory.Button(window, "equipA", "Equip armor…", new Vector2(1, 0), new Vector2(150, 36),
+                () => OpenEquipPicker(false), 14);
+            // stack the two equip buttons at the bottom-right of the window
+            var eqWRt = eqW.GetComponent<RectTransform>();
+            eqWRt.anchoredPosition = new Vector2(-160f, 46f);
+            var eqARt = eqA.GetComponent<RectTransform>();
+            eqARt.anchoredPosition = new Vector2(-160f, 90f);
         }
 
         public void Open()
@@ -67,6 +85,7 @@ namespace PokeProfessions.UI
             selectedIdx = -1;
             pendingEquip = false;
             pendingItemId = "";
+            HidePicker();
             Refresh();
             Show(true);
         }
@@ -122,6 +141,8 @@ namespace PokeProfessions.UI
             if (sp != null) sb.AppendLine(sp.desc);
             sb.AppendLine("Level " + c.level + "   XP " + c.xp + "/" + BattleEngine.XpToNext(c.level));
             sb.AppendLine("HP " + c.curHP + "/" + c.MaxHP + "   ATK " + c.ATK + "   DEF " + c.DEF + "   SPD " + c.SPD);
+            sb.AppendLine("Weapon: " + (c.weapon != "" ? ItemDB.Name(c.weapon) : "none") +
+                          "   Armor: " + (c.armor != "" ? ItemDB.Name(c.armor) : "none"));
             if (c.status != "") sb.AppendLine("Condition: " + c.status);
             sb.AppendLine();
             sb.AppendLine("Moves:");
@@ -187,11 +208,139 @@ namespace PokeProfessions.UI
                 }
             }
 
+            // creature gear? point at the equip buttons
+            foreach (var id in CreatureGearIds)
+            {
+                if (s.CountItem(id) > 0)
+                {
+                    Toast.Push("Creature gear: select a creature, then Equip weapon/armor.");
+                    return;
+                }
+            }
+
             Toast.Push("Nothing usable in the bag.");
+        }
+
+        // ---------------- creature equipment picker ----------------
+
+        void OpenEquipPicker(bool weapon)
+        {
+            var s = Game.I.State;
+            if (selectedIdx < 0 || selectedIdx >= s.party.Count)
+            {
+                Toast.Push("Select a creature first.");
+                return;
+            }
+            pickingWeapon = weapon;
+            BuildPicker();
+            pickerCg.alpha = 1f;
+            pickerCg.blocksRaycasts = true;
+            pickerCg.interactable = true;
+        }
+
+        void EnsurePicker()
+        {
+            if (pickerCg != null) return;
+            var win = UIFactory.Box(transform, "equipPicker", UiTheme.Bg,
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-190, -160), new Vector2(190, 160));
+            pickerCg = win.gameObject.AddComponent<CanvasGroup>();
+
+            UIFactory.TextAt(win, "pickerHeader", "Choose gear", 16,
+                new Vector2(0, 1), new Vector2(1, 1), new Vector2(12, -28), new Vector2(-52, -4),
+                TextAnchor.MiddleLeft);
+            UIFactory.Button(win, "pickerClose", "X", new Vector2(1, 1), new Vector2(40, 26),
+                HidePicker, 12, UiTheme.Panel);
+
+            pickerList = UIFactory.Box(win, "pickerList", new Color(0, 0, 0, 0.12f),
+                new Vector2(0, 0), new Vector2(1, 1), new Vector2(8, 8), new Vector2(-8, -36));
+        }
+
+        void BuildPicker()
+        {
+            EnsurePicker();
+            foreach (var b in pickerButtons) if (b != null) Destroy(b.gameObject);
+            pickerButtons.Clear();
+
+            var s = Game.I.State;
+            var c = s.party[selectedIdx];
+            string[] pool = pickingWeapon ? GearWeapons : GearArmors;
+            string current = pickingWeapon ? c.weapon : c.armor;
+
+            AddPickerRow(current != "" ? "Unequip " + ItemDB.Name(current) : "(nothing equipped)",
+                () => ApplyEquip(""));
+
+            int owned = 0;
+            foreach (var id in pool)
+            {
+                int n = s.CountItem(id);
+                if (n <= 0) continue;
+                owned++;
+                var captured = id;
+                var def = ItemDB.Get(id);
+                AddPickerRow(def.name + "  x" + n + "   " + BonusLabel(def), () => ApplyEquip(captured));
+            }
+            if (owned == 0)
+                AddPickerRow("(no gear in bag — craft some first)", null);
+        }
+
+        void AddPickerRow(string label, System.Action onClick)
+        {
+            int i = pickerButtons.Count;
+            var btn = UIFactory.Button(pickerList, "g" + i, label, new Vector2(0, 1), new Vector2(330, 34),
+                onClick, 13);
+            btn.transform.SetParent(pickerList, false);
+            var rt = btn.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0, 1);
+            rt.anchorMax = new Vector2(1, 1);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.anchoredPosition = new Vector2(0, -4 - i * 38f);
+            rt.sizeDelta = new Vector2(0, 34);
+            pickerButtons.Add(btn);
+        }
+
+        void ApplyEquip(string itemId)
+        {
+            var s = Game.I.State;
+            var c = s.party[selectedIdx];
+            string prev = pickingWeapon ? c.weapon : c.armor;
+
+            if (string.IsNullOrEmpty(itemId))
+            {
+                if (prev != "") s.AddItem(prev, 1);
+                if (pickingWeapon) c.weapon = ""; else c.armor = "";
+                Toast.Push("Unequipped.");
+            }
+            else
+            {
+                if (!s.RemoveItem(itemId, 1)) { Toast.Push("None left in the bag."); return; }
+                if (prev != "") s.AddItem(prev, 1); // swapped gear returns to the bag
+                if (pickingWeapon) c.weapon = itemId; else c.armor = itemId;
+                Toast.Push(c.DisplayName + " equipped " + ItemDB.Name(itemId) + ".");
+            }
+            if (c.curHP > c.MaxHP) c.curHP = c.MaxHP; // armor HP bonus may have changed
+            HidePicker();
+            Refresh();
+        }
+
+        void HidePicker()
+        {
+            if (pickerCg == null) return;
+            pickerCg.alpha = 0f;
+            pickerCg.blocksRaycasts = false;
+            pickerCg.interactable = false;
+        }
+
+        string BonusLabel(ItemDef d)
+        {
+            if (d == null || string.IsNullOrEmpty(d.equipBonus)) return "";
+            return d.equipBonus.Replace("|", ", ").Replace("atk+", "+ATK ")
+                               .Replace("def+", "+DEF ").Replace("spd+", "+SPD ")
+                               .Replace("hp+", "+HP ").Trim();
         }
 
         public void Show(bool on)
         {
+            if (!on) HidePicker();
             cg.alpha = on ? 1f : 0f;
             cg.blocksRaycasts = on;
             cg.interactable = on;

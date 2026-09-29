@@ -134,7 +134,8 @@ namespace PokeProfessions.Core
             // ================= SHOPS =================
             Shop("general", "Vale Post Traders", new[] {
                 "core_wood:6", "core_iron:3", "trail_snack:8", "salve:6", "purge_draught:4",
-                "rope:5", "fiber:-1", "bitterleaf:-1", "stone:-1" });
+                "rope:5", "fiber:-1", "bitterleaf:-1", "stone:-1",
+                "gear_claw:2", "gear_band:2", "gear_fang:1", "gear_hide:1" });
 
             // ================= QUESTS =================
             Q(new QuestDef

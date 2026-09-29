@@ -105,11 +105,18 @@ namespace PokeProfessions.Core
                 foreach (var c in s.party) if (c != null && c.speciesId != null && CreatureDB.Get(c.speciesId) == null) return null;
                 foreach (var c in s.box) if (c != null && c.speciesId != null && CreatureDB.Get(c.speciesId) == null) return null;
                 // rehydrate non-serialized state on every creature
-                foreach (var c in s.party) if (c != null) { c.NormalizeMoves(); c.RestorePPAfterLoad(); }
-                foreach (var c in s.box) if (c != null) { c.NormalizeMoves(); c.RestorePPAfterLoad(); }
+                foreach (var c in s.party) if (c != null) { c.NormalizeMoves(); c.RestorePPAfterLoad(); ValidateGear(c); }
+                foreach (var c in s.box) if (c != null) { c.NormalizeMoves(); c.RestorePPAfterLoad(); ValidateGear(c); }
                 return s;
             }
             catch (Exception) { return null; }
+        }
+
+        /// <summary>Drop equipped gear ids that no longer exist in the ItemDB (save compat).</summary>
+        static void ValidateGear(Creature c)
+        {
+            if (!string.IsNullOrEmpty(c.weapon) && ItemDB.Get(c.weapon) == null) c.weapon = "";
+            if (!string.IsNullOrEmpty(c.armor) && ItemDB.Get(c.armor) == null) c.armor = "";
         }
 
         public void Save()
