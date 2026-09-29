@@ -803,6 +803,9 @@ namespace PokeProfessions.World
             // slot machine — by the shop stall, blinking in the lantern light
             SpawnSlotsMachine(new Vector3(-11.8f, 0, -14.2f));
 
+            // a second machine right by the spawn plaza — first thing you see when you wake up
+            SpawnSlotsMachine(new Vector3(2.8f, 0, -17.6f));
+
             // NPCs — townfolk in Emberpost, wanderers further afield
             // (the Sleeper spawns later via story flag)
             SpawnNpc("maren", new Vector3(7.5f, 0, -14.6f));   // by her stall, east plaza
