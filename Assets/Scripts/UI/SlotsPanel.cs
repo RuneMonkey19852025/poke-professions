@@ -49,6 +49,10 @@ namespace PokeProfessions.UI
         bool spinning;
         bool wonJackpot;
 
+        // ---- hot hand: consecutive winning spins (session-only) ----
+        int winStreak;
+        Text streakText;
+
         public static SlotsPanel Build(Canvas canvas)
         {
             var go = new GameObject("SlotsPanel", typeof(RectTransform), typeof(SlotsPanel));
@@ -89,6 +93,11 @@ namespace PokeProfessions.UI
                 new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(-140, -62), new Vector2(140, -40),
                 TextAnchor.MiddleCenter, UiTheme.Accent2);
 
+            // hot-hand streak readout
+            streakText = UIFactory.TextAt(window, "streak", "", 12,
+                new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(-140, -84), new Vector2(140, -64),
+                TextAnchor.MiddleCenter, UiTheme.Accent);
+
             // three reels
             for (int i = 0; i < 3; i++)
             {
@@ -118,14 +127,22 @@ namespace PokeProfessions.UI
             pay.text =
                 "ooo  60c + fiber      ///  90c + stone\n" +
                 "HHH  150c + copper bar   ***  500c + THE JACKPOT\n" +
-                "any pair: 10–40c + a material · losses feed the pot";
+                "any pair: 10–40c + a material · losses feed the pot\n" +
+                "back-to-back wins build a HOT HAND: up to +100% coins & bonus drops";
         }
 
         public void Open()
         {
             spinning = false;
+            // the hot hand persists across machines in a session — it's the player's, not the machine's
             Refresh(true);
             Show(true);
+        }
+
+        /// <summary>Coin bonus multiplier for the current streak: +25% per win, capped at +100%.</summary>
+        static float StreakMultiplier(int streak)
+        {
+            return 1f + 0.25f * Mathf.Min(streak, 4);
         }
 
         void Refresh(bool resetDisplay)
@@ -133,6 +150,9 @@ namespace PokeProfessions.UI
             var s = Game.I.State;
             coinsText.text = s.coins + " coins";
             potText.text = "JACKPOT  " + s.jackpotPot + "c";
+            streakText.text = winStreak >= 2
+                ? "HOT HAND  x" + winStreak + "  (pays +" + Mathf.RoundToInt((StreakMultiplier(winStreak) - 1f) * 100f) + "%)"
+                : "";
             spinButton.interactable = !spinning && s.coins >= SpinCost;
             if (resetDisplay)
             {
@@ -239,30 +259,50 @@ namespace PokeProfessions.UI
                     s.jackpotPot = StartingPot;
                 }
 
+                // hot hand: each consecutive win pays more
+                winStreak++;
+                int baseCoins = coinsWon;
+                coinsWon = Mathf.RoundToInt(coinsWon * StreakMultiplier(winStreak));
+                // streak 3+: the hot hand shakes loose a bonus material
+                int bonusQty = winStreak >= 3 ? Mathf.Min(3, winStreak - 1) : 0;
+
                 s.coins += coinsWon;
                 if (itemWon != null) s.AddItem(itemWon, itemQty);
+                if (bonusQty > 0 && itemWon != null) s.AddItem(itemWon, bonusQty);
                 Sfx.I.Play(wonJackpot ? "evolve" : triple ? "levelup" : "coin");
+
+                string streakNote = winStreak >= 2
+                    ? "\n<color=#6FCF97>Hot hand x" + winStreak + " — +" + (coinsWon - baseCoins) + "c bonus</color>"
+                    : "";
+                string bonusNote = bonusQty > 0 && itemWon != null
+                    ? "\n<color=#6FCF97>Hot hand drops +" + bonusQty + " extra " + ItemDB.Name(itemWon) + "</color>"
+                    : "";
 
                 if (wonJackpot)
                 {
                     resultText.text = "<b>★ JACKPOT! ★</b>\n" +
                         "<color=#F2994A>+" + coinsWon + " coins</color>" +
-                        (itemWon != null ? "  <color=#6FCF97>+" + itemQty + " " + ItemDB.Name(itemWon) + "</color>" : "") +
+                        (itemWon != null ? "  <color=#6FCF97>+" + (itemQty + bonusQty) + " " + ItemDB.Name(itemWon) + "</color>" : "") +
+                        streakNote +
                         "\nThe pot resets to " + s.jackpotPot + "c — good luck rebuilding it.";
                 }
                 else
                 {
                     resultText.text = (triple ? "<b>TRIPLE " + SymNames[finalSymbols[0]].ToUpper() + "!</b>\n" : "Pair of " + SymNames[matchSym] + "!\n") +
                         "<color=#F2994A>+" + coinsWon + " coins</color>" +
-                        (itemWon != null ? "  <color=#6FCF97>+" + itemQty + " " + ItemDB.Name(itemWon) + "</color>" : "");
+                        (itemWon != null ? "  <color=#6FCF97>+" + (itemQty + bonusQty) + " " + ItemDB.Name(itemWon) + "</color>" : "") +
+                        streakNote + bonusNote;
                 }
             }
             else
             {
-                // every losing spin feeds the shared progressive pot
+                // every losing spin feeds the shared progressive pot; the hot hand cools off
                 int feed = SpinCost - 5;
                 s.jackpotPot += feed;
-                resultText.text = "No luck — " + feed + "c rolls into the jackpot.";
+                resultText.text = winStreak >= 2
+                    ? "The streak breaks at x" + winStreak + " — " + feed + "c rolls into the jackpot."
+                    : "No luck — " + feed + "c rolls into the jackpot.";
+                winStreak = 0;
                 Sfx.I.Play("hit");
             }
 

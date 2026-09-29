@@ -50,7 +50,9 @@ no external assets, no network, no API keys.
 - **The Lucky Snorlax** — slot machines in Emberpost (one at the spawn plaza,
   one by the Vale Post stall), 25c a spin. Wins pay coins and drop crafting
   materials; every losing spin feeds the shared progressive jackpot, and
-  triple stars pay 500c + a Moonshard **plus the whole pot**.
+  triple stars pay 500c + a Moonshard **plus the whole pot**. Back-to-back
+  wins build a hot hand: +25% coins per streak level (max +100%) and bonus
+  material drops from streak 3.
 - **Story** — 3 acts, 8 quests. See walkthrough below.
 
 ## Quest walkthrough (spoilers)
