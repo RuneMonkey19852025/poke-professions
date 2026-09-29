@@ -41,7 +41,7 @@ namespace PokeProfessions.Core
             string species = pool[Random.Range(0, pool.Count)];
             var sp = CreatureDB.Get(species);
 
-            int lo = 2, hi = 6;
+            int lo = 2, hi = 4; // meadow: gentler than the starter (lv5)
             switch (zone)
             {
                 case "ridge": lo = 8; hi = 12; break;

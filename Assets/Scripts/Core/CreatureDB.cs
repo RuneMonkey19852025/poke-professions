@@ -83,7 +83,7 @@ namespace PokeProfessions.Core
             S("sprigling", "Sprigling", Element.Verdant, 12, 11, 10, 9,
               "A sprouting seed-fox that naps in sunbeams.",
               "thornpaw", 14, new[] { "tackle", "leafdart", "growl", "springshoot", "leech", "briar" },
-              "#7FC46B", "#3E7A3A", "quad", 1f, 60, 22, "meadow");
+              "#7FC46B", "#3E7A3A", "quad", 1f, 72, 22, "meadow");
             S("thornpaw", "Thornpaw", Element.Verdant, 16, 15, 13, 12,
               "Its bramble tail sweeps trails clean behind it.",
               "briarwolf", 30, new[] { "scratch", "leafdart", "springshoot", "leech", "briar", "focus" },
@@ -96,7 +96,7 @@ namespace PokeProfessions.Core
             S("puddlepup", "Puddlepup", Element.Tide, 13, 10, 11, 10,
               "Chases raindrops and puddles with equal joy.",
               "tidehound", 15, new[] { "tackle", "tuftide", "growl", "douse", "ripple", "bodyslam" },
-              "#6FA8DC", "#33628F", "quad", 1f, 60, 22, "meadow");
+              "#6FA8DC", "#33628F", "quad", 1f, 72, 22, "meadow");
             S("tidehound", "Tidehound", Element.Tide, 18, 14, 14, 14,
               "Its bark sounds like a wave clapping stone.",
               "maelmoor", 30, new[] { "tackle", "tuftide", "douse", "ripple", "bodyslam", "harden" },
@@ -109,7 +109,7 @@ namespace PokeProfessions.Core
             S("cindercub", "Cindercub", Element.Ember, 12, 12, 9, 11,
               "Sleeps curled around its own warm tail.",
               "pyrelynx", 14, new[] { "scratch", "emberbit", "growl", "fume", "flurrena", "focus" },
-              "#E8824A", "#A34A22", "quad", 1f, 60, 22, "meadow");
+              "#E8824A", "#A34A22", "quad", 1f, 72, 22, "meadow");
             S("pyrelynx", "Pyrelynx", Element.Ember, 17, 17, 12, 15,
               "Twin tail-flames flicker with its mood.",
               "solarmane", 30, new[] { "scratch", "emberbit", "fume", "flurrena", "focus", "quickpeck" },
@@ -122,7 +122,7 @@ namespace PokeProfessions.Core
             S("flitwing", "Flitwing", Element.Gale, 11, 11, 8, 13,
               "A pocket-sized storm in feathers.",
               "galedart", 13, new[] { "quickpeck", "gust", "growl", "flashstep", "cyclone", "bodyslam" },
-              "#9FB6E8", "#5A6FA8", "avian", 0.9f, 65, 20, "meadow");
+              "#9FB6E8", "#5A6FA8", "avian", 0.9f, 78, 20, "meadow");
             S("galedart", "Galedart", Element.Gale, 15, 16, 11, 18,
               "Rides thermals over the whole valley in a morning.",
               "", 0, new[] { "quickpeck", "gust", "flashstep", "cyclone", "bodyslam", "focus" },
@@ -131,7 +131,7 @@ namespace PokeProfessions.Core
             S("burrowmouse", "Burrowmouse", Element.Normal, 12, 10, 10, 11,
               "Its cheeks are bigger than its ambitions.",
               "vaultmole", 12, new[] { "tackle", "scratch", "growl", "mudsling", "bulwark", "bodyslam" },
-              "#C4A882", "#8A7050", "quad", 0.9f, 70, 20, "meadow");
+              "#C4A882", "#8A7050", "quad", 0.9f, 82, 20, "meadow");
             S("vaultmole", "Vaultmole", Element.Stone, 17, 14, 15, 8,
               "Digs counting-holes: one for every coin it finds.",
               "", 0, new[] { "scratch", "mudsling", "bulwark", "pebble", "landslide", "harden" },
