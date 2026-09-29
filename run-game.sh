@@ -20,11 +20,13 @@ fi
 
 if command -v systemd-run >/dev/null 2>&1 \
    && systemctl --user is-system-running >/dev/null 2>&1; then
+  # units start in a different working dir — always pass an absolute script path
+  SCRIPT="$(realpath "$0")"
   exec systemd-run --user --unit=emberwild-game \
     --setenv="DISPLAY=${DISPLAY:-:0}" \
     --setenv="WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}" \
     --setenv="XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}" \
-    env EMBERWILD_LAUNCHED=1 bash "$0" "$@"
+    env EMBERWILD_LAUNCHED=1 bash "$SCRIPT" "$@"
 fi
 
 echo "error: systemd user session unavailable; refusing to run the game as a" >&2
