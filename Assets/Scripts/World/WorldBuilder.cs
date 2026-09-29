@@ -739,27 +739,36 @@ namespace PokeProfessions.World
                 var tree = new GameObject("Tree_" + zone);
                 tree.transform.position = new Vector3(px, GroundHeight(px, pz), pz);
 
-                // trunk: tapered two-tier
+                // trunk: tapered two-tier — top tier must reach the crown (y=2.2)
                 var trunk = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
                 trunk.name = "trunk";
                 trunk.transform.SetParent(tree.transform, false);
-                trunk.transform.localPosition = new Vector3(0, 1.0f, 0);
-                trunk.transform.localScale = new Vector3(0.32f, 1.0f, 0.32f);
+                trunk.transform.localPosition = new Vector3(0, 0.7f, 0);
+                trunk.transform.localScale = new Vector3(0.46f, 0.7f, 0.46f);
                 trunk.GetComponent<MeshRenderer>().material = ToonMat("#7A5230");
                 var tc = trunk.GetComponent<Collider>(); if (tc != null) Destroy(tc);
+                var trunkTop = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                trunkTop.name = "trunkTop";
+                trunkTop.transform.SetParent(tree.transform, false);
+                trunkTop.transform.localPosition = new Vector3(0, 1.6f, 0);
+                trunkTop.transform.localScale = new Vector3(0.32f, 0.6f, 0.32f);
+                trunkTop.GetComponent<MeshRenderer>().material = ToonMat("#7A5230");
+                var tc2 = trunkTop.GetComponent<Collider>(); if (tc2 != null) Destroy(tc2);
 
-                // foliage: layered spheres, slightly offset — classic stylized look
+                // foliage: layered spheres, slightly offset — classic stylized look.
+                // pivot at 2.05 keeps the low junction puff overlapping the trunk top.
                 var crownPivot = new GameObject("crownPivot").transform;
                 crownPivot.SetParent(tree.transform, false);
-                crownPivot.localPosition = new Vector3(0, 2.4f, 0);
-                string[] tones = { colorHex, Lighten(colorHex, 0.12f), Darken(colorHex, 0.1f), colorHex };
+                crownPivot.localPosition = new Vector3(0, 2.05f, 0);
+                string[] tones = { colorHex, Lighten(colorHex, 0.12f), Darken(colorHex, 0.1f), colorHex, Darken(colorHex, 0.18f) };
                 Vector3[] offs = {
-                    new Vector3(0f, 0.75f, 0f),
-                    new Vector3(0.55f, 0.42f, 0.18f),
-                    new Vector3(-0.48f, 0.38f, -0.22f),
-                    new Vector3(0.12f, 0.45f, -0.5f)
+                    new Vector3(0f, 0.95f, 0f),
+                    new Vector3(0.55f, 0.6f, 0.18f),
+                    new Vector3(-0.48f, 0.55f, -0.22f),
+                    new Vector3(0.12f, 0.62f, -0.5f),
+                    new Vector3(0f, 0.28f, 0f)
                 };
-                float[] rads = { 1.05f, 0.72f, 0.68f, 0.62f };
+                float[] rads = { 1.05f, 0.72f, 0.68f, 0.62f, 0.78f };
                 for (int k = 0; k < offs.Length; k++)
                 {
                     var puff = GameObject.CreatePrimitive(PrimitiveType.Sphere);
