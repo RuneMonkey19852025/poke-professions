@@ -40,6 +40,15 @@ namespace PokeProfessions.Core
             InitPP(EnemyTeam);
         }
 
+        GameState saveState; // for weapon mastery lookups (set by BattlePanel/Game)
+
+        /// <summary>Call once before the battle so mastery bonuses and KO XP can apply.</summary>
+        public BattleEngine WithState(GameState state)
+        {
+            saveState = state;
+            return this;
+        }
+
         /// <summary>Ensure every creature has a PP entry per move (wild spawns had none — they could only flail).</summary>
         static void InitPP(List<Creature> team)
         {
@@ -224,6 +233,11 @@ namespace PokeProfessions.Core
             {
                 Emit(def.DisplayName + " fainted!");
                 Sfx("faint");
+
+                // mastery XP: every KO with an equipped weapon trains its class
+                if (saveState != null && PlayerTeam != null && PlayerTeam.Contains(atk))
+                    WeaponMastery.AddXp(saveState, WeaponMastery.ClassOf(atk.weapon), WeaponMastery.XpPerKO);
+
                 HandleFaint(def);
             }
         }
@@ -237,8 +251,13 @@ namespace PokeProfessions.Core
             float atkStat = atk.ATK * (1f + 0.25f * AtkBuff(atk));
             float defStat = Mathf.Max(1, def.DEF * (1f + 0.25f * DefBuff(def)));
 
+            // weapon mastery: the equipped weapon's class hits harder as it levels
+            float mastery = 1f;
+            if (saveState != null && PlayerTeam != null && PlayerTeam.Contains(atk))
+                mastery = WeaponMastery.AttackMultiplier(saveState, WeaponMastery.ClassOf(atk.weapon));
+
             float dmg = ((2f * atk.level / 5f + 2f) * mv.power * atkStat / defStat) / 50f + 2f;
-            dmg *= eff * stab * variance;
+            dmg *= eff * stab * variance * mastery;
 
             string label = TypeChart.Label(eff);
             if (!string.IsNullOrEmpty(label)) Emit(label);

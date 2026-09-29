@@ -257,4 +257,15 @@ namespace PokeProfessions.Core
     }
 
     public enum StatusKind { None, Poison, Burn, Sleep, Paralyze }
+
+    /// <summary>Weapon classes for mastery. None covers bare attacks (no XP).</summary>
+    public enum WeaponClass
+    {
+        None = -1,
+        Claws = 0,   // gear_claw
+        Fangs = 1,   // gear_fang
+        Spines = 2,  // gear_stormspine
+        Plates = 3,  // gear_band, gear_hide, gear_plate
+        Charms = 4   // gear_charm
+    }
 }

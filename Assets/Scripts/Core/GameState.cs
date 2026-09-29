@@ -21,6 +21,12 @@ namespace PokeProfessions.Core
         public int[] profLevels = new int[6] { 1, 1, 1, 1, 1, 1 };
         public int[] profXp = new int[6];
 
+        // ---- weapon mastery ----
+        // grows as equipped creature gear lands KOs in battle; each level
+        // strengthens that class of weapon (see WeaponMastery.AttackBonus).
+        public int[] weaponLevels = new int[5];
+        public int[] weaponXp = new int[5];
+
         public int ProfLevel(ProfessionId p) { return profLevels[(int)p]; }
         public int ProfXp(ProfessionId p) { return profXp[(int)p]; }
         public void SetProfLevel(ProfessionId p, int v) { profLevels[(int)p] = v; }

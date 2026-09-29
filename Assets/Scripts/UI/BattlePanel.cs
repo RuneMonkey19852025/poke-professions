@@ -115,7 +115,7 @@ namespace PokeProfessions.UI
 
         public void Begin(BattleEngine eng)
         {
-            engine = eng;
+            engine = eng.WithState(Game.I.State); // enable weapon mastery bonuses/XP
             ended = false;
             logLines.Clear();
             logText.text = "";

@@ -173,17 +173,27 @@ namespace PokeProfessions.UI
             if (selectedIdx >= 0 && selectedIdx < s.party.Count)
             {
                 var c = s.party[selectedIdx];
+                string masteryLine = "";
+                var wc = WeaponMastery.ClassOf(c.weapon);
+                if (wc != WeaponClass.None)
+                {
+                    int lvl = WeaponMastery.Level(s, wc);
+                    int pct = Mathf.RoundToInt((WeaponMastery.AttackMultiplier(s, wc) - 1f) * 100f);
+                    masteryLine = "\n<color=#6FCF97>" + WeaponMastery.Name(wc) + " mastery Lv" + lvl +
+                                  " ( weapon attacks +" + pct + "% )</color>";
+                }
                 detail.text = "<b>" + c.DisplayName + "</b>  Lv" + c.level + "\n" +
                     "ATK " + c.ATK + "  DEF " + c.DEF + "  SPD " + c.SPD + "  HP " + c.curHP + "/" + c.MaxHP + "\n" +
                     "Weapon: " + (c.weapon != "" ? ItemDB.Name(c.weapon) : "—") +
                     "   Armor: " + (c.armor != "" ? ItemDB.Name(c.armor) : "—") + "\n" +
                     "Gear bonuses: +" + c.GearAtk() + " ATK, +" + c.GearDef() + " DEF, +" +
-                    c.GearSpd() + " SPD, +" + c.GearHp() + " HP";
+                    c.GearSpd() + " SPD, +" + c.GearHp() + " HP" + masteryLine;
             }
             else
             {
                 detail.text = "Select a creature, then equip a weapon or armor from your bag.\n" +
-                              "Swapped gear returns to the bag automatically.";
+                              "Swapped gear returns to the bag automatically.\n" +
+                              "KOs with an equipped weapon raise that class's mastery (max +60% ATK).";
             }
         }
 

@@ -108,7 +108,8 @@ namespace PokeProfessions.UI
 
             bestText.text = "Creatures caught: " + s.catchCount +
                             " · Battles won: " + s.battleWins +
-                            "\nSpecies recorded: " + s.caughtSpecies.Count + " / " + CreatureDB.Order.Count;
+                            "\nSpecies recorded: " + s.caughtSpecies.Count + " / " + CreatureDB.Order.Count +
+                            "\n\n<b>— Weapon mastery —</b>\n" + MasteryLines(s);
         }
 
         public void Show(bool on)
@@ -116,6 +117,21 @@ namespace PokeProfessions.UI
             cg.alpha = on ? 1f : 0f;
             cg.blocksRaycasts = on;
             cg.interactable = on;
+        }
+
+        static string MasteryLines(GameState s)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (WeaponClass wc in System.Enum.GetValues(typeof(WeaponClass)))
+            {
+                if (wc == WeaponClass.None) continue;
+                int lvl = WeaponMastery.Level(s, wc);
+                int need = WeaponMastery.XpToNext(lvl);
+                sb.AppendLine(WeaponMastery.Name(wc) + ": Lv" + lvl +
+                    (lvl >= WeaponMastery.MaxLevel ? " MAX" : "  (" + WeaponMastery.Xp(s, wc) + "/" + need + ")") +
+                    "  +" + Mathf.RoundToInt((WeaponMastery.AttackMultiplier(s, wc) - 1f) * 100f) + "% ATK");
+            }
+            return sb.ToString();
         }
     }
 }
