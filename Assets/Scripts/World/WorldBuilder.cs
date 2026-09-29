@@ -803,8 +803,9 @@ namespace PokeProfessions.World
             // slot machine — by the shop stall, blinking in the lantern light
             SpawnSlotsMachine(new Vector3(-11.8f, 0, -14.2f));
 
-            // a second machine right by the spawn plaza — first thing you see when you wake up
-            SpawnSlotsMachine(new Vector3(2.8f, 0, -17.6f));
+            // a second machine on the plaza's top row, 4th square from the left
+            // (center slab), turned to face the player walking up from spawn
+            SpawnSlotsMachine(new Vector3(0f, 0f, -7.37f), 180f);
 
             // NPCs — townfolk in Emberpost, wanderers further afield
             // (the Sleeper spawns later via story flag)
@@ -1130,11 +1131,12 @@ namespace PokeProfessions.World
         }
 
         /// <summary>The Lucky Snorlax: a chunky arcade slot machine interactable.</summary>
-        void SpawnSlotsMachine(Vector3 xz)
+        void SpawnSlotsMachine(Vector3 xz, float yawDeg = 0f)
         {
             var go = new GameObject("SlotsMachine");
             var s = go.AddComponent<SlotsInteractable>();
             go.transform.position = new Vector3(xz.x, GroundHeight(xz.x, xz.z), xz.z);
+            go.transform.rotation = Quaternion.Euler(0f, yawDeg, 0f);
 
             var bodyMat = ToonMat("#7A3A50");   // dusty magenta cabinet
             var trimMat = ToonMat("#3A2430");   // dark trim
