@@ -52,7 +52,22 @@ namespace PokeProfessions.World
             float d = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z)) / (0.5f * 200f);
             h -= Mathf.Pow(Mathf.Clamp01(d), 6f) * 8f;
 
+            // Emberpost town pad: the spawn settlement sits on level ground.
+            // Flat core with a soft feather so the meadow hills ease in.
+            float mx = Mathf.Clamp01((TownHalfW - Mathf.Abs(x - TownCX)) / TownFeather);
+            float mz = Mathf.Clamp01((TownHalfH - Mathf.Abs(z - TownCZ)) / TownFeather);
+            h = Mathf.Lerp(h, TownY, mx * mz);
+
             return h;
+        }
+
+        // ---- Emberpost town pad (must match BuildTown) ----
+        const float TownCX = 0f, TownCZ = -12f, TownHalfW = 34f, TownHalfH = 26f, TownFeather = 6f, TownY = 1.6f;
+
+        /// <summary>Inside the flattened town rectangle (plus optional margin).</summary>
+        public static bool InTownPad(float x, float z, float pad = 0f)
+        {
+            return Mathf.Abs(x - TownCX) <= TownHalfW + pad && Mathf.Abs(z - TownCZ) <= TownHalfH + pad;
         }
 
         // ---- bridge deck constants (must match BuildBridge) ----
@@ -86,6 +101,379 @@ namespace PokeProfessions.World
             BuildGrass();
             BuildZoneVolumes();
             BuildProps();
+            BuildTown();
+        }
+
+        // ================= Emberpost, the spawn settlement =================
+        // A compact frontier town around the spawn point: plaza, bell tower,
+        // four timber homes, forge hut, shop hut, well, lanterns, fences.
+
+        void BuildTown()
+        {
+            BuildPlaza();
+
+            BuildHouse("RangerPost", new Vector3(-14f, 0f, -21f), 0f, "#6E4A2E", "#A8503C");
+            BuildHouse("ShopHut", new Vector3(14f, 0f, -21f), 0f, "#6E4A2E", "#3E7A8C");
+            BuildHouse("WestHome", new Vector3(-19f, 0f, -1f), 90f, "#6E4A2E", "#B08A3E");
+            BuildHouse("EastHome", new Vector3(19f, 0f, -1f), 90f, "#6E4A2E", "#5B8C4A");
+            BuildBellTower(new Vector3(0f, 0f, 6.5f));
+
+            BuildFenceRow(new Vector3(-10.5f, 0f, -30.5f), new Vector3(10.5f, 0f, -30.5f), 8);
+            BuildFenceRow(new Vector3(-24.5f, 0f, -16f), new Vector3(-24.5f, 0f, 9f), 6);
+            BuildFenceRow(new Vector3(24.5f, 0f, -16f), new Vector3(24.5f, 0f, 9f), 6);
+            BuildFenceRow(new Vector3(-10.5f, 0f, 13.5f), new Vector3(-3f, 0f, 13.5f), 4);
+            BuildFenceRow(new Vector3(3f, 0f, 13.5f), new Vector3(10.5f, 0f, 13.5f), 4);
+
+            SpawnLantern("plazaW", new Vector3(-5.5f, 0f, -6.5f));
+            SpawnLantern("plazaE", new Vector3(5.5f, 0f, -6.5f));
+            SpawnLantern("north", new Vector3(-7f, 0f, 4f));
+            SpawnLantern("south", new Vector3(9f, 0f, -14f));
+
+            var well = new GameObject("TownWell");
+            well.transform.position = new Vector3(-3.4f, 0f, -8.4f);
+            BuildWell(well.transform);
+
+            BuildPathStones(new Vector3(0f, 0f, -27f), new Vector3(0f, 0f, 13f));
+        }
+
+        void BuildPlaza()
+        {
+            const float half = 5.4f;
+            const float gap = 0.14f;
+            for (int gz = -3; gz <= 3; gz++)
+            {
+                for (int gx = -3; gx <= 3; gx++)
+                {
+                    var slab = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    slab.name = "plazaSlab";
+                    float px = gx * (half / 3.5f);
+                    float pz = gz * (half / 3.5f);
+                    slab.transform.position = new Vector3(TownCX + px, TownY - 0.04f, TownCZ + pz);
+                    slab.transform.localScale = new Vector3(half / 3.5f - gap, 0.09f, half / 3.5f - gap);
+                    slab.transform.rotation = Quaternion.Euler(0f, Random.Range(-2.5f, 2.5f), 0f);
+                    slab.GetComponent<MeshRenderer>().material = ToonMat("#7E786C");
+                    var c = slab.GetComponent<Collider>(); if (c != null) Destroy(c);
+                }
+            }
+        }
+
+        /// <summary>Timber A-frame house: walls, roof, door, windows, eaves pegs.</summary>
+        void BuildHouse(string name, Vector3 xz, float rotDeg, string wallHex, string roofHex)
+        {
+            var house = new GameObject("House_" + name);
+            house.transform.position = new Vector3(xz.x, TownY, xz.z);
+            house.transform.rotation = Quaternion.Euler(0f, rotDeg, 0f);
+
+            const float w = 4.6f, d = 3.8f, wallH = 2.3f;
+            var wallMat = ToonMat(wallHex);
+            var trimMat = ToonMat("#4A3220");
+
+            // four walls (front wall split by the doorway)
+            var back = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            back.name = "wallBack";
+            back.transform.SetParent(house.transform, false);
+            back.transform.localPosition = new Vector3(0f, wallH / 2f, -d / 2f);
+            back.transform.localScale = new Vector3(w, wallH, 0.16f);
+            back.GetComponent<MeshRenderer>().material = wallMat;
+
+            var left = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            left.name = "wallLeft";
+            left.transform.SetParent(house.transform, false);
+            left.transform.localPosition = new Vector3(-w / 2f, wallH / 2f, 0f);
+            left.transform.localScale = new Vector3(0.16f, wallH, d);
+            left.GetComponent<MeshRenderer>().material = wallMat;
+
+            var right = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            right.name = "wallRight";
+            right.transform.SetParent(house.transform, false);
+            right.transform.localPosition = new Vector3(w / 2f, wallH / 2f, 0f);
+            right.transform.localScale = new Vector3(0.16f, wallH, d);
+            right.GetComponent<MeshRenderer>().material = wallMat;
+
+            const float doorW = 1.1f, sideW = (w - doorW) / 2f;
+            var frontL = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            frontL.name = "wallFrontL";
+            frontL.transform.SetParent(house.transform, false);
+            frontL.transform.localPosition = new Vector3(-(doorW + sideW) / 2f, wallH / 2f, d / 2f);
+            frontL.transform.localScale = new Vector3(sideW, wallH, 0.16f);
+            frontL.GetComponent<MeshRenderer>().material = wallMat;
+
+            var frontR = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            frontR.name = "wallFrontR";
+            frontR.transform.SetParent(house.transform, false);
+            frontR.transform.localPosition = new Vector3((doorW + sideW) / 2f, wallH / 2f, d / 2f);
+            frontR.transform.localScale = new Vector3(sideW, wallH, 0.16f);
+            frontR.GetComponent<MeshRenderer>().material = wallMat;
+
+            var lintel = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            lintel.name = "lintel";
+            lintel.transform.SetParent(house.transform, false);
+            lintel.transform.localPosition = new Vector3(0f, wallH - 0.25f, d / 2f);
+            lintel.transform.localScale = new Vector3(doorW + 0.3f, 0.5f, 0.18f);
+            lintel.GetComponent<MeshRenderer>().material = trimMat;
+
+            // gable roof: two slabs meeting at a ridge
+            const float roofW = 1.7f;
+            var roofL = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            roofL.name = "roofL";
+            roofL.transform.SetParent(house.transform, false);
+            roofL.transform.localPosition = new Vector3(-w / 4f, wallH + roofW / 2f * 0.72f, 0f);
+            roofL.transform.localScale = new Vector3(roofW, 0.14f, d + 0.5f);
+            roofL.transform.rotation = Quaternion.Euler(0f, 0f, 40f);
+            roofL.GetComponent<MeshRenderer>().material = ToonMat(roofHex);
+
+            var roofR = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            roofR.name = "roofR";
+            roofR.transform.SetParent(house.transform, false);
+            roofR.transform.localPosition = new Vector3(w / 4f, wallH + roofW / 2f * 0.72f, 0f);
+            roofR.transform.localScale = new Vector3(roofW, 0.14f, d + 0.5f);
+            roofR.transform.rotation = Quaternion.Euler(0f, 0f, -40f);
+            roofR.GetComponent<MeshRenderer>().material = ToonMat(roofHex);
+
+            // ridge beam
+            var ridge = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            ridge.name = "ridgeBeam";
+            ridge.transform.SetParent(house.transform, false);
+            ridge.transform.localPosition = new Vector3(0f, wallH + roofW * 0.72f, 0f);
+            ridge.transform.localScale = new Vector3(0.22f, 0.22f, d + 0.55f);
+            ridge.GetComponent<MeshRenderer>().material = trimMat;
+
+            // door plank
+            var door = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            door.name = "door";
+            door.transform.SetParent(house.transform, false);
+            door.transform.localPosition = new Vector3(0f, 1.05f, d / 2f + 0.06f);
+            door.transform.localScale = new Vector3(doorW - 0.1f, 2.1f, 0.1f);
+            door.GetComponent<MeshRenderer>().material = ToonMat("#8A5A34");
+
+            // windows on side walls
+            for (int s = -1; s <= 1; s += 2)
+            {
+                var win = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                win.name = "window";
+                win.transform.SetParent(house.transform, false);
+                win.transform.localPosition = new Vector3(s * (w / 2f + 0.05f), 1.35f, -0.7f);
+                win.transform.localScale = new Vector3(0.08f, 0.7f, 0.9f);
+                win.GetComponent<MeshRenderer>().material = ToonMat("#F2E6B8");
+            }
+
+            // corner posts
+            for (int sx = -1; sx <= 1; sx += 2)
+            {
+                for (int sz = -1; sz <= 1; sz += 2)
+                {
+                    var post = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    post.name = "cornerPost";
+                    post.transform.SetParent(house.transform, false);
+                    post.transform.localPosition = new Vector3(sx * (w / 2f + 0.02f), wallH / 2f, sz * (d / 2f + 0.02f));
+                    post.transform.localScale = new Vector3(0.22f, wallH, 0.22f);
+                    post.GetComponent<MeshRenderer>().material = trimMat;
+                }
+            }
+
+            AddBlobShadow(house.transform, 2.6f);
+            spawned.Add(house);
+        }
+
+        /// <summary>Small bell tower at the plaza's north edge.</summary>
+        void BuildBellTower(Vector3 xz)
+        {
+            var tower = new GameObject("BellTower");
+            tower.transform.position = new Vector3(xz.x, TownY, xz.z);
+            var woodMat = ToonMat("#6E4A2E");
+            var trimMat = ToonMat("#4A3220");
+
+            for (int sx = -1; sx <= 1; sx += 2)
+            {
+                for (int sz = -1; sz <= 1; sz += 2)
+                {
+                    var leg = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    leg.name = "leg";
+                    leg.transform.SetParent(tower.transform, false);
+                    leg.transform.localPosition = new Vector3(sx * 0.75f, 1.55f, sz * 0.75f);
+                    leg.transform.localScale = new Vector3(0.22f, 3.1f, 0.22f);
+                    leg.GetComponent<MeshRenderer>().material = woodMat;
+                }
+            }
+
+            var roofL = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            roofL.name = "roofL";
+            roofL.transform.SetParent(tower.transform, false);
+            roofL.transform.localPosition = new Vector3(-0.62f, 3.45f, 0f);
+            roofL.transform.localScale = new Vector3(1.5f, 0.12f, 1.9f);
+            roofL.transform.rotation = Quaternion.Euler(0f, 0f, 38f);
+            roofL.GetComponent<MeshRenderer>().material = ToonMat("#A8503C");
+
+            var roofR = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            roofR.name = "roofR";
+            roofR.transform.SetParent(tower.transform, false);
+            roofR.transform.localPosition = new Vector3(0.62f, 3.45f, 0f);
+            roofR.transform.localScale = new Vector3(1.5f, 0.12f, 1.9f);
+            roofR.transform.rotation = Quaternion.Euler(0f, 0f, -38f);
+            roofR.GetComponent<MeshRenderer>().material = ToonMat("#A8503C");
+
+            var crossbar = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            crossbar.name = "crossbar";
+            crossbar.transform.SetParent(tower.transform, false);
+            crossbar.transform.localPosition = new Vector3(0f, 2.85f, 0f);
+            crossbar.transform.localScale = new Vector3(1.72f, 0.14f, 0.14f);
+            crossbar.GetComponent<MeshRenderer>().material = trimMat;
+
+            var bell = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            bell.name = "bell";
+            bell.transform.SetParent(tower.transform, false);
+            bell.transform.localPosition = new Vector3(0f, 2.55f, 0f);
+            bell.transform.localScale = new Vector3(0.42f, 0.5f, 0.42f);
+            bell.GetComponent<MeshRenderer>().material = ToonMat("#D8B24A");
+            var bc = bell.GetComponent<Collider>(); if (bc != null) Destroy(bc);
+
+            AddBlobShadow(tower.transform, 1.3f);
+            spawned.Add(tower);
+        }
+
+        /// <summary>Post-and-rail fence between two points.</summary>
+        void BuildFenceRow(Vector3 from, Vector3 to, int posts)
+        {
+            var woodMat = ToonMat("#7A5A38");
+            for (int i = 0; i <= posts; i++)
+            {
+                float t = i / (float)posts;
+                float x = Mathf.Lerp(from.x, to.x, t);
+                float z = Mathf.Lerp(from.z, to.z, t);
+                var post = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                post.name = "fencePost";
+                post.transform.position = new Vector3(x, TownY + 0.5f, z);
+                post.transform.localScale = new Vector3(0.14f, 1.0f, 0.14f);
+                post.GetComponent<MeshRenderer>().material = woodMat;
+                var pc = post.GetComponent<Collider>(); if (pc != null) Destroy(pc);
+
+                if (i < posts)
+                {
+                    float nx = Mathf.Lerp(from.x, to.x, (i + 1) / (float)posts);
+                    float nz = Mathf.Lerp(from.z, to.z, (i + 1) / (float)posts);
+                    var rail = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    rail.name = "fenceRail";
+                    rail.transform.position = new Vector3((x + nx) / 2f, TownY + 0.78f, (z + nz) / 2f);
+                    rail.transform.localScale = new Vector3(Mathf.Abs(nx - x) + 0.18f, 0.1f, Mathf.Abs(nz - z) + 0.18f);
+                    rail.GetComponent<MeshRenderer>().material = woodMat;
+                    var rc = rail.GetComponent<Collider>(); if (rc != null) Destroy(rc);
+                }
+            }
+        }
+
+        /// <summary>Wrought lantern: post, arm, warm glass cube.</summary>
+        void SpawnLantern(string name, Vector3 xz)
+        {
+            var lamp = new GameObject("Lantern_" + name);
+            lamp.transform.position = new Vector3(xz.x, TownY, xz.z);
+            var ironMat = ToonMat("#3A3A42");
+
+            var post = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            post.name = "post";
+            post.transform.SetParent(lamp.transform, false);
+            post.transform.localPosition = new Vector3(0f, 1.05f, 0f);
+            post.transform.localScale = new Vector3(0.1f, 2.1f, 0.1f);
+            post.GetComponent<MeshRenderer>().material = ironMat;
+
+            var head = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            head.name = "glass";
+            head.transform.SetParent(lamp.transform, false);
+            head.transform.localPosition = new Vector3(0f, 2.2f, 0f);
+            head.transform.localScale = new Vector3(0.3f, 0.34f, 0.3f);
+            head.GetComponent<MeshRenderer>().material = ToonMat("#FFD75E");
+
+            var cap = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cap.name = "cap";
+            cap.transform.SetParent(lamp.transform, false);
+            cap.transform.localPosition = new Vector3(0f, 2.42f, 0f);
+            cap.transform.localScale = new Vector3(0.4f, 0.08f, 0.4f);
+            cap.GetComponent<MeshRenderer>().material = ironMat;
+
+            AddBlobShadow(lamp.transform, 0.35f);
+            spawned.Add(lamp);
+        }
+
+        /// <summary>Stone well: ring, posts, little roof, bucket beam.</summary>
+        void BuildWell(Transform parent)
+        {
+            parent.position = new Vector3(parent.position.x, TownY, parent.position.z);
+            var stoneMat = ToonMat("#8E8A80");
+            var woodMat = ToonMat("#6E4A2E");
+
+            for (int i = 0; i < 8; i++)
+            {
+                float a = i / 8f * Mathf.PI * 2f;
+                var st = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                st.name = "wellStone";
+                st.transform.SetParent(parent, false);
+                st.transform.localPosition = new Vector3(Mathf.Cos(a) * 0.75f, 0.3f, Mathf.Sin(a) * 0.75f);
+                st.transform.localScale = new Vector3(0.52f, 0.6f, 0.3f);
+                st.transform.rotation = Quaternion.Euler(0f, a * Mathf.Rad2Deg, 0f);
+                st.GetComponent<MeshRenderer>().material = stoneMat;
+                var sc = st.GetComponent<Collider>(); if (sc != null) Destroy(sc);
+            }
+
+            var water = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            water.name = "wellWater";
+            water.transform.SetParent(parent, false);
+            water.transform.localPosition = new Vector3(0f, 0.32f, 0f);
+            water.transform.localScale = new Vector3(0.6f, 0.02f, 0.6f);
+            water.GetComponent<MeshRenderer>().material = ToonMat("#3E6A8C");
+            var wc = water.GetComponent<Collider>(); if (wc != null) Destroy(wc);
+
+            for (int s = -1; s <= 1; s += 2)
+            {
+                var up = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                up.name = "wellPost";
+                up.transform.SetParent(parent, false);
+                up.transform.localPosition = new Vector3(s * 0.7f, 1.3f, 0f);
+                up.transform.localScale = new Vector3(0.12f, 1.6f, 0.12f);
+                up.GetComponent<MeshRenderer>().material = woodMat;
+            }
+
+            var beam = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            beam.name = "wellBeam";
+            beam.transform.SetParent(parent, false);
+            beam.transform.localPosition = new Vector3(0f, 2.1f, 0f);
+            beam.transform.localScale = new Vector3(1.6f, 0.1f, 0.1f);
+            beam.GetComponent<MeshRenderer>().material = woodMat;
+
+            var roofL = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            roofL.name = "wellRoofL";
+            roofL.transform.SetParent(parent, false);
+            roofL.transform.localPosition = new Vector3(-0.5f, 2.4f, 0f);
+            roofL.transform.localScale = new Vector3(1.2f, 0.08f, 1.2f);
+            roofL.transform.rotation = Quaternion.Euler(0f, 0f, 35f);
+            roofL.GetComponent<MeshRenderer>().material = ToonMat("#A8503C");
+
+            var roofR = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            roofR.name = "wellRoofR";
+            roofR.transform.SetParent(parent, false);
+            roofR.transform.localPosition = new Vector3(0.5f, 2.4f, 0f);
+            roofR.transform.localScale = new Vector3(1.2f, 0.08f, 1.2f);
+            roofR.transform.rotation = Quaternion.Euler(0f, 0f, -35f);
+            roofR.GetComponent<MeshRenderer>().material = ToonMat("#A8503C");
+
+            AddBlobShadow(parent, 1.0f);
+        }
+
+        /// <summary>Flat stepping-stone path down the town's main street.</summary>
+        void BuildPathStones(Vector3 from, Vector3 to)
+        {
+            int n = 9;
+            for (int i = 0; i <= n; i++)
+            {
+                float t = i / (float)n;
+                float x = Mathf.Lerp(from.x, to.x, t) + Mathf.Sin(i * 2.7f) * 0.7f;
+                float z = Mathf.Lerp(from.z, to.z, t);
+                var st = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                st.name = "pathStone";
+                st.transform.position = new Vector3(x, TownY - 0.02f, z);
+                st.transform.localScale = new Vector3(Random.Range(0.8f, 1.2f), 0.06f, Random.Range(0.6f, 0.9f));
+                st.transform.rotation = Quaternion.Euler(0f, Random.Range(-12f, 12f), 0f);
+                st.GetComponent<MeshRenderer>().material = ToonMat("#847D6E");
+                var c = st.GetComponent<Collider>(); if (c != null) Destroy(c);
+            }
         }
 
         static WorldStyle style;
@@ -163,6 +551,8 @@ namespace PokeProfessions.World
                     if (x > 30f && z > 60f) c = deepC;
                     // sandy ring around the shore
                     if (y < 0.35f) c = Color.Lerp(c, ColorFromHex("#E8DCA8"), 0.75f);
+                    // worn earth under the town, outside the plaza stones
+                    if (InTownPad(x, z)) c = Color.Lerp(c, ColorFromHex("#C9B98A"), 0.45f);
                     // rocky grey above the treeline on the ridge
                     if (y > 7.5f && x > 40f) c = Color.Lerp(c, ColorFromHex("#9C9284"), Mathf.Clamp01((y - 7.5f) / 3f));
                     // painterly variation: subtle checker + noise mottle
@@ -291,6 +681,7 @@ namespace PokeProfessions.World
                 float gy = GroundHeight(cx, cz);
                 if (gy < 0.25f) { i--; continue; }
                 if (gy > 7.5f) continue;
+                if (InTownPad(cx, cz, 1f)) { i--; continue; } // no wild grass in the streets
 
                 int blades = 3;
                 for (int b = 0; b < blades; b++)
@@ -338,7 +729,7 @@ namespace PokeProfessions.World
         void BuildZoneVolumes()
         {
             if (ZoneVolumeRoot == null) return;
-            AddZone("meadow", new Vector3(0, 0, 0), new Vector3(56, 12, 56));
+            AddZone("meadow", new Vector3(0, -12, 0), new Vector3(72, 12, 72)); // covers the Emberpost pad
             AddZone("ridge", new Vector3(70, 5, 15), new Vector3(50, 14, 50));
             AddZone("lake", new Vector3(-8, 0, -78), new Vector3(48, 12, 40));
             AddZone("hollow", new Vector3(10, 0, 75), new Vector3(46, 12, 40));
@@ -361,25 +752,26 @@ namespace PokeProfessions.World
         // ---------------- props & interactables ----------------
         void BuildProps()
         {
-            // trees, rocks scattered per zone
-            ScatterTrees("meadow", 40, new Vector2(-30, 30), new Vector2(-30, 30));
+            // trees, rocks scattered per zone — kept out of the town pad
+            ScatterTrees("meadow", 30, new Vector2(-30, 30), new Vector2(-30, 30), "#5F8F4F", (x, z) => InTownPad(x, z));
             ScatterTrees("ridge", 26, new Vector2(48, 95), new Vector2(-8, 40), "#8A6A48");
             ScatterTrees("hollow", 34, new Vector2(-12, 32), new Vector2(58, 92), "#4A6A4A");
 
             // rocks for silhouette variety
-            ScatterRocks("meadow", 12, new Vector2(-32, 32), new Vector2(-32, 32));
+            ScatterRocks("meadow", 10, new Vector2(-32, 32), new Vector2(-32, 32), (x, z) => InTownPad(x, z));
             ScatterRocks("ridge", 18, new Vector2(46, 95), new Vector2(-10, 42));
 
             // gathering nodes
-            // Lv0 starter nodes around the ranch: gatherable with zero training
-            SpawnNode("bush_meadowgrass", new Vector3(4, 0, -10));
-            SpawnNode("bush_meadowgrass", new Vector3(11, 0, -9));
-            SpawnNode("bush_meadowgrass", new Vector3(9, 0, -20));
+            // Lv0 starter nodes: a dooryard garden row along the south fence,
+            // plus the pebble/creek pair near the plaza — gatherable at lv0
+            SpawnNode("bush_meadowgrass", new Vector3(5, 0, -25.5f));
+            SpawnNode("bush_meadowgrass", new Vector3(9.5f, 0, -25.5f));
+            SpawnNode("bush_meadowgrass", new Vector3(12, 0, -25.5f));
             SpawnNode("rock_pebble", new Vector3(2, 0, -18));
             SpawnNode("rock_pebble", new Vector3(14, 0, -15));
             SpawnNode("spot_creek", new Vector3(-2, 0, -26));
 
-            SpawnNode("bush_bitterleaf", new Vector3(8, 0, -12));
+            SpawnNode("bush_bitterleaf", new Vector3(-9, 0, -25.5f));
             SpawnNode("bush_bitterleaf", new Vector3(-14, 0, 6));
             SpawnNode("bush_bitterleaf", new Vector3(-6, 0, 22));
             SpawnNode("bush_fiber", new Vector3(16, 0, 4));
@@ -400,21 +792,22 @@ namespace PokeProfessions.World
             SpawnNode("spot_river", new Vector3(-2, 0, -46));
             SpawnNode("spot_lake", new Vector3(-8, 0, -62));
 
-            // crafting stations
-            SpawnStation("forge", "Brann's Forge", new Vector3(-24, 0, -2), "#8A4A30");
-            SpawnStation("campfire", "Meadow Campfire", new Vector3(6, 0, -4), "#D06A30");
-            SpawnStation("workbench", "Post Workbench", new Vector3(-12, 0, -24), "#7A6A50");
+            // crafting stations — grouped in the heart of Emberpost
+            SpawnStation("forge", "Brann's Forge", new Vector3(-16.4f, 0, -12.2f), "#8A4A30");
+            SpawnStation("campfire", "Emberpost Hearth", new Vector3(4.8f, 0, -8.2f), "#D06A30");
+            SpawnStation("workbench", "Post Workbench", new Vector3(16.4f, 0, -12.2f), "#7A6A50");
 
-            // shop
-            SpawnShop("general", "Vale Post Traders", new Vector3(-16, 0, -20));
+            // shop — west side, clear of the spawn vista
+            SpawnShop("general", "Vale Post Traders", new Vector3(-8.2f, 0, -16.8f));
 
-            // NPCs (the Sleeper spawns later via story flag)
-            SpawnNpc("maren", new Vector3(10, 0, -20));
-            SpawnNpc("pell", new Vector3(-26, 0, -34));
-            SpawnNpc("juna", new Vector3(-10, 0, -8));
-            SpawnNpc("brann", new Vector3(-23, 0, 1));
-            SpawnNpc("odessa", new Vector3(-4, 0, 2));
-            SpawnNpc("tobin", new Vector3(30, 0, -30));
+            // NPCs — townfolk in Emberpost, wanderers further afield
+            // (the Sleeper spawns later via story flag)
+            SpawnNpc("maren", new Vector3(7.5f, 0, -14.6f));   // by her stall, east plaza
+            SpawnNpc("brann", new Vector3(-13.6f, 0, -10.8f)); // tending his forge
+            SpawnNpc("juna", new Vector3(-5.2f, 0, -13.4f));   // by the traders' stall
+            SpawnNpc("odessa", new Vector3(2.4f, 0, 4.6f));    // beneath the bell tower
+            SpawnNpc("pell", new Vector3(-18.5f, 0, -23.5f));  // porch of the ranger post
+            SpawnNpc("tobin", new Vector3(26f, 0, -26f));      // east road out of town
             SpawnNpc("sela", new Vector3(58, 0, 30));
             SpawnNpc("korrin", new Vector3(70, 0, 10));
             SpawnNpc("vesna", new Vector3(-12, 0, -58));
@@ -517,7 +910,7 @@ namespace PokeProfessions.World
         }
 
         /// <summary>Scattered decorative rocks.</summary>
-        void ScatterRocks(string zone, int count, Vector2 x, Vector2 z)
+        void ScatterRocks(string zone, int count, Vector2 x, Vector2 z, System.Func<float, float, bool> exclude = null)
         {
             for (int i = 0; i < count; i++)
             {
@@ -525,6 +918,7 @@ namespace PokeProfessions.World
                 float pz = Random.Range(z.x, z.y);
                 float gy = GroundHeight(px, pz);
                 if (gy < 0.2f) continue;
+                if (exclude != null && exclude(px, pz)) continue; // keep clear of town
                 var rock = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 rock.name = "Rock_" + zone;
                 rock.transform.position = new Vector3(px, gy + 0.1f, pz);
@@ -729,13 +1123,14 @@ namespace PokeProfessions.World
         }
 
         // ---------------- helpers ----------------
-        void ScatterTrees(string zone, int count, Vector2 x, Vector2 z, string colorHex = "#5F8F4F")
+        void ScatterTrees(string zone, int count, Vector2 x, Vector2 z, string colorHex = "#5F8F4F", System.Func<float, float, bool> exclude = null)
         {
             for (int i = 0; i < count; i++)
             {
                 float px = Random.Range(x.x, x.y);
                 float pz = Random.Range(z.x, z.y);
                 if (GroundHeight(px, pz) < 0.2f) continue; // skip water
+                if (exclude != null && exclude(px, pz)) continue; // keep clear of town
                 var tree = new GameObject("Tree_" + zone);
                 tree.transform.position = new Vector3(px, GroundHeight(px, pz), pz);
 

@@ -228,8 +228,8 @@ namespace PokeProfessions.World
             yield return new WaitForSeconds(1.2f);
             // heal and respawn at the ranch
             State.HealAll();
-            State.playerX = 6f;
-            State.playerZ = -14f;
+            State.playerX = 0f;
+            State.playerZ = -16f;
             var pc = FindObjectOfType<PlayerController>();
             if (pc != null)
             {

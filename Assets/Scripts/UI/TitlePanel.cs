@@ -24,6 +24,9 @@ namespace PokeProfessions.UI
             var p = go.GetComponent<TitlePanel>();
             p.Build();
             p.Show(true);
+            // @codebuff TEMP: env-var autostart for verification — REMOVE AFTER USE
+            if (System.Environment.GetEnvironmentVariable("EMBERWILD_AUTOSTART") == "1")
+                p.Invoke(nameof(p.StartGame), 1.5f);
             return p;
         }
 

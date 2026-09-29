@@ -79,8 +79,8 @@ namespace PokeProfessions.Core
         public int catchCount, battleWins;
 
         // ---- world ----
-        public float playerX = 6f;
-        public float playerZ = -14f;
+        public float playerX = 0f;   // wake up on Emberpost's plaza
+        public float playerZ = -16f;
         public string curZone = "meadow";
         public List<string> claimedNodes = new List<string>(); // kept for save compat
 
