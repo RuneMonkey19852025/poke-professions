@@ -47,9 +47,10 @@ no external assets, no network, no API keys.
 - **Battles** — Turn-based: FIGHT / BAG / SWITCH / RUN. 12 elements with full
   effectiveness chart, STAB bonus, statuses (burn/poison/sleep/paralysis), buffs,
   draining moves. Enemies level with their zone.
-- **The Lucky Snorlax** — slot machine by the Vale Post stall in Emberpost,
-  25c a spin. Wins pay coins and drop crafting materials; triple stars pay
-  500c and a Moonshard.
+- **The Lucky Snorlax** — slot machines in Emberpost (one at the spawn plaza,
+  one by the Vale Post stall), 25c a spin. Wins pay coins and drop crafting
+  materials; every losing spin feeds the shared progressive jackpot, and
+  triple stars pay 500c + a Moonshard **plus the whole pot**.
 - **Story** — 3 acts, 8 quests. See walkthrough below.
 
 ## Quest walkthrough (spoilers)

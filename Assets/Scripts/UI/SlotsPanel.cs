@@ -39,6 +39,7 @@ namespace PokeProfessions.UI
         static readonly int[] TriplePay = { 60, 90, 150, 500 };
 
         const int SpinCost = 25;
+        const int StartingPot = 150; // pot floor: reset value after any jackpot
 
         CanvasGroup cg;
         Text[] reels = new Text[3];
@@ -46,6 +47,7 @@ namespace PokeProfessions.UI
         Button spinButton;
         readonly int[] finalSymbols = new int[3];
         bool spinning;
+        bool wonJackpot;
 
         public static SlotsPanel Build(Canvas canvas)
         {
@@ -82,6 +84,11 @@ namespace PokeProfessions.UI
                 new Vector2(0, 1), new Vector2(1, 1), new Vector2(16, -58), new Vector2(-16, -38),
                 TextAnchor.MiddleCenter, UiTheme.TextDim);
 
+            // progressive jackpot readout (shared across both machines)
+            potText = UIFactory.TextAt(window, "jackpot", "", 15,
+                new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(-140, -62), new Vector2(140, -40),
+                TextAnchor.MiddleCenter, UiTheme.Accent2);
+
             // three reels
             for (int i = 0; i < 3; i++)
             {
@@ -104,18 +111,14 @@ namespace PokeProfessions.UI
                 new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(-280, -130), new Vector2(280, -116),
                 TextAnchor.MiddleCenter);
 
-            potText = UIFactory.TextAt(window, "pot", "", 12,
-                new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(-280, -152), new Vector2(280, -138),
-                TextAnchor.MiddleCenter, UiTheme.TextDim);
-
             // pay table
             var pay = UIFactory.TextAt(window, "paytable", "", 11,
                 new Vector2(0, 0), new Vector2(1, 0), new Vector2(14, 8), new Vector2(-14, 66),
                 TextAnchor.UpperLeft, UiTheme.TextDim);
             pay.text =
                 "ooo  60c + fiber      ///  90c + stone\n" +
-                "HHH  150c + copper bar   ***  500c + moonshard\n" +
-                "any pair: 10–40c + a material";
+                "HHH  150c + copper bar   ***  500c + THE JACKPOT\n" +
+                "any pair: 10–40c + a material · losses feed the pot";
         }
 
         public void Open()
@@ -129,12 +132,12 @@ namespace PokeProfessions.UI
         {
             var s = Game.I.State;
             coinsText.text = s.coins + " coins";
+            potText.text = "JACKPOT  " + s.jackpotPot + "c";
             spinButton.interactable = !spinning && s.coins >= SpinCost;
             if (resetDisplay)
             {
                 for (int i = 0; i < 3; i++) reels[i].text = "?";
                 resultText.text = "Pull the lever!";
-                potText.text = "";
             }
         }
 
@@ -145,6 +148,7 @@ namespace PokeProfessions.UI
             if (s.coins < SpinCost) { Toast.Push("Not enough coins — win some at the Vale Post."); return; }
 
             s.coins -= SpinCost;
+            wonJackpot = false;
             Sfx.I.Play("coin");
             spinning = true;
 
@@ -171,7 +175,6 @@ namespace PokeProfessions.UI
         {
             Refresh(false);
             resultText.text = "…";
-            potText.text = "";
 
             // spin animation: symbols flicker, reels settle left to right
             float[] stopAt = { 0.9f, 1.4f, 1.9f };
@@ -228,20 +231,38 @@ namespace PokeProfessions.UI
             // ---- pay out ----
             if (coinsWon > 0)
             {
+                // the triple-star jackpot also sweeps the whole shared pot
+                if (triple && finalSymbols[0] == 3)
+                {
+                    wonJackpot = true;
+                    coinsWon += s.jackpotPot;
+                    s.jackpotPot = StartingPot;
+                }
+
                 s.coins += coinsWon;
                 if (itemWon != null) s.AddItem(itemWon, itemQty);
-                Sfx.I.Play(triple && finalSymbols[0] == 3 ? "levelup" : "coin");
+                Sfx.I.Play(wonJackpot ? "evolve" : triple ? "levelup" : "coin");
 
-                resultText.text = (triple ? "<b>TRIPLE " + SymNames[finalSymbols[0]].ToUpper() + "!</b>\n" : "Pair of " + SymNames[matchSym] + "!\n") +
-                    "<color=#F2994A>+" + coinsWon + " coins</color>" +
-                    (itemWon != null ? "  <color=#6FCF97>+" + itemQty + " " + ItemDB.Name(itemWon) + "</color>" : "");
-                potText.text = triple ? "The machine rattles and disgorges supplies." : "";
+                if (wonJackpot)
+                {
+                    resultText.text = "<b>★ JACKPOT! ★</b>\n" +
+                        "<color=#F2994A>+" + coinsWon + " coins</color>" +
+                        (itemWon != null ? "  <color=#6FCF97>+" + itemQty + " " + ItemDB.Name(itemWon) + "</color>" : "") +
+                        "\nThe pot resets to " + s.jackpotPot + "c — good luck rebuilding it.";
+                }
+                else
+                {
+                    resultText.text = (triple ? "<b>TRIPLE " + SymNames[finalSymbols[0]].ToUpper() + "!</b>\n" : "Pair of " + SymNames[matchSym] + "!\n") +
+                        "<color=#F2994A>+" + coinsWon + " coins</color>" +
+                        (itemWon != null ? "  <color=#6FCF97>+" + itemQty + " " + ItemDB.Name(itemWon) + "</color>" : "");
+                }
             }
             else
             {
-                // near-miss flavor: two matching but non-adjacent still counts as loss
-                resultText.text = "No luck. The Vale keeps your coins.";
-                potText.text = "";
+                // every losing spin feeds the shared progressive pot
+                int feed = SpinCost - 5;
+                s.jackpotPot += feed;
+                resultText.text = "No luck — " + feed + "c rolls into the jackpot.";
                 Sfx.I.Play("hit");
             }
 

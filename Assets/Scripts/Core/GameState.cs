@@ -31,6 +31,11 @@ namespace PokeProfessions.Core
         public List<ItemStack> inventory = new List<ItemStack>();
         public string equippedItem = "";
 
+        // ---- Lucky Snorlax jackpot ----
+        // Shared pot across both machines: every losing spin feeds it, a
+        // triple-star jackpot pays the whole pot and resets it.
+        public int jackpotPot = 150;
+
         public int CountItem(string id)
         {
             foreach (var s in inventory) if (s.itemId == id) return s.count;
