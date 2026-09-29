@@ -469,6 +469,17 @@ namespace PokeProfessions.UI
                 OnLog("Your creatures are exhausted... You hurry back to the ranch.");
                 if (Game.I != null) Game.I.NotifyPlayerDefeat();
             }
+            else if (engine.Result == BattleResult.PlayerWon && !engine.IsTrainerBattle)
+            {
+                // wild creatures shed crafting materials
+                var drops = WildLoot.Roll(engine.EnemyMon);
+                var st = Game.I != null ? Game.I.State : null;
+                foreach (var d in drops)
+                {
+                    if (st != null) st.AddItem(d.id, d.n);
+                    OnLog("You gathered " + d.n + "x " + ItemDB.Name(d.id) + ".");
+                }
+            }
             else if (engine.Result == BattleResult.PlayerWon && engine.IsTrainerBattle && engine.Trainer != null)
             {
                 foreach (var line in engine.Trainer.winLines) OnLog(line);

@@ -3,6 +3,56 @@ using UnityEngine;
 
 namespace PokeProfessions.Core
 {
+    /// <summary>
+    /// Wild-encounter loot: defeated creatures shed crafting materials themed
+    /// to their element. Diggers kick up ore; the Hollow's deep rares hum with
+    /// moonshards. Quantity scales with the fallen creature's level.
+    /// </summary>
+    public static class WildLoot
+    {
+        public struct Drop { public string id; public int n; public Drop(string id, int n) { this.id = id; this.n = n; } }
+
+        public static List<Drop> Roll(Creature wild)
+        {
+            var drops = new List<Drop>();
+            if (wild == null || wild.Species == null) return drops;
+            string sp = wild.speciesId;
+
+            // specials first
+            if (sp == "vaultmole") drops.Add(new Drop("copper_ore", 1));
+            if (sp == "cragma")
+            {
+                drops.Add(new Drop("copper_ore", 1));
+                if (Random.value < 0.35f) drops.Add(new Drop("iron_ore", 1));
+            }
+            if ((sp == "sleeperling" || sp == "frostwisp" || sp == "gildra") && Random.value < 0.6f)
+                drops.Add(new Drop("moonshard", 1));
+
+            // element-themed material, quantity scaling with level
+            string mat = MaterialFor(wild.Species.element);
+            int n = 1 + wild.level / 12;
+            drops.Add(new Drop(mat, n));
+            if (Random.value < 0.25f) drops.Add(new Drop(mat, 1)); // bonus handful
+            return drops;
+        }
+
+        static string MaterialFor(Element el)
+        {
+            switch (el)
+            {
+                case Element.Verdant: return "fiber";
+                case Element.Tide: return "raw_fish";
+                case Element.Ember: return "emberpepper";
+                case Element.Stone: return "stone";
+                case Element.Toxic: return "bitterleaf";
+                case Element.Mind: return "glowcap";
+                case Element.Shade: return "bitterleaf";
+                case Element.Frost: return "glowcap";
+                default: return "fiber"; // Gale, Beast, Normal
+            }
+        }
+    }
+
     /// <summary>Builds Creature instances for wild spawns, trainers and gifts.</summary>
     public static class MonsterFactory
     {
