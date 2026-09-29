@@ -81,6 +81,12 @@ namespace PokeProfessions.Core
                 }
             }
 
+            if (line.healParty)
+            {
+                state.HealAll();
+                Toast.Push("Your creatures are fully rested!");
+            }
+
             if (!string.IsNullOrEmpty(line.questId))
             {
                 var q = QuestSystem.Get(line.questId);
@@ -150,6 +156,7 @@ namespace PokeProfessions.Core
                     if (state.HasFlag("caught_first")) return "maren_yes";
                     return activeOrDone("q_firstcatch") ? "maren_no" : "maren_idle";
                 case "pell": return state.HasFlag("met_pell") ? "pell_loop" : "pell_intro";
+                case "mira": return state.HasFlag("met_mira") ? "mira_loop" : "mira_intro";
                 case "juna": return activeOrDone("q_professions") ? "juna_loop" : "juna_intro";
                 case "odessa": return state.HasFlag("ridge_opened") ? "odessa_loop" : "odessa_intro";
                 case "tobin": return state.defeatedTrainers.Contains("trainer_tobin") ? "tobin_loop" : "tobin_fight";

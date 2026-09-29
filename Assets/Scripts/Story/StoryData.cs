@@ -48,6 +48,7 @@ namespace PokeProfessions.Core
         public string teach;         // "profId:levels"
         public string spawnCreature; // "speciesId:level"
         public string spawnTrainer;  // trainerId
+        public bool healParty;       // free full party heal (Mira at the well)
         public string openShop;      // shopId
         public string openCraft;     // station id ("forge", "campfire", "workbench")
         public string endRule;       // "" = advance to next line, "end", "choice"
@@ -118,6 +119,7 @@ namespace PokeProfessions.Core
             // ================= NPCs =================
             Npc("maren", "Maren", "Rancher", "#D9884A", "meadow", new[] { "maren_idle", "maren_yes", "maren_no" });
             Npc("pell", "Old Pell", "Ferryman", "#7A9E7E", "meadow", new[] { "pell_intro", "pell_loop" });
+            Npc("mira", "Mira", "Well Tender", "#8FD0A8", "meadow", new[] { "mira_intro", "mira_loop" });
             Npc("juna", "Juna", "Professions Warden", "#C9A0DC", "meadow", new[] { "juna_intro", "juna_loop" });
             Npc("brann", "Brann", "Smith", "#B0653A", "meadow", new[] { "brann_intro", "brann_accept", "brann_decline", "brann_loop" });
             Npc("odessa", "Odessa", "Ranger Captain", "#5A7FBF", "meadow", new[] { "odessa_intro", "odessa_yes", "odessa_no", "odessa_loop" });
@@ -264,6 +266,13 @@ namespace PokeProfessions.Core
                 new DialogueLine { speaker = "Old Pell", text = "Ah. The lantern chose you. It did me, sixty years back. I still hear it humming of nights.", endRule = "end" });
             Node("pell_loop",
                 new DialogueLine { speaker = "Old Pell", text = "Sixty years I've ferried folk to the Hollow mouth. None came back the same. Most didn't come back at all.", endRule = "end" });
+
+            // --- Mira, well tender — heals your party for free ---
+            Node("mira_intro",
+                new DialogueLine { speaker = "Mira", text = "Mind the stones, traveler — the well water remembers every stumble. Your creatures look weary. Here, let the water work.", healParty = true, endRule = "" },
+                new DialogueLine { speaker = "Mira", text = "There. Good as spring-water fresh. Rest is the only medicine I can't draw from a rope — anything ails them, come find me.", endRule = "end" });
+            Node("mira_loop",
+                new DialogueLine { speaker = "Mira", text = "Need the water's kindness again? Hold still a moment.", healParty = true, endRule = "end" });
 
             // --- Juna, professions warden ---
             Node("juna_intro",

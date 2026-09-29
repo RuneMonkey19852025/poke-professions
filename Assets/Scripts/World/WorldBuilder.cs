@@ -807,6 +807,7 @@ namespace PokeProfessions.World
             SpawnNpc("juna", new Vector3(-5.2f, 0, -13.4f));   // by the traders' stall
             SpawnNpc("odessa", new Vector3(2.4f, 0, 4.6f));    // beneath the bell tower
             SpawnNpc("pell", new Vector3(-18.5f, 0, -23.5f));  // porch of the ranger post
+            SpawnNpc("mira", new Vector3(-4.9f, 0, -7.0f));    // tending the well
             SpawnNpc("tobin", new Vector3(26f, 0, -26f));      // east road out of town
             SpawnNpc("sela", new Vector3(58, 0, 30));
             SpawnNpc("korrin", new Vector3(70, 0, 10));

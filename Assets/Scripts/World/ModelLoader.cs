@@ -105,6 +105,7 @@ namespace PokeProfessions.World
         {
             { "maren",  "KayKitAdventurers/Characters/fbx/Ranger" },
             { "pell",   "KayKitAdventurers/Characters/fbx/Mage" },
+            { "mira",   "KayKitAdventurers/Characters/fbx/Rogue_Hooded" },
             { "juna",   "KayKitAdventurers/Characters/fbx/Rogue" },
             { "brann",  "KayKitAdventurers/Characters/fbx/Barbarian" },
             { "odessa", "KayKitAdventurers/Characters/fbx/Knight" },
