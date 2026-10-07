@@ -45,3 +45,6 @@ Assets/Playtest.exit*
 
 # Unity's unsaved-scene recovery snapshots
 Assets/_Recovery/
+
+# ...and its meta
+Assets/_Recovery.meta
