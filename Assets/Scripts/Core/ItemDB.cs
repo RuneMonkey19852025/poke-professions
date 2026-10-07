@@ -50,6 +50,75 @@ namespace PokeProfessions.Core
             Add(new ItemDef { id = "lure_charm", name = "Lure Charm", desc = "Equipped: wild encounters are 25% more frequent.", kind = ItemKind.Equipment, basePrice = 80, equipBonus = "lure", iconColorHex = "#D4A5C9", sellable = false });
             Add(new ItemDef { id = "scout_band", name = "Scout Band", desc = "Equipped: wild creatures appear 2 levels weaker.", kind = ItemKind.Equipment, basePrice = 100, equipBonus = "scout", iconColorHex = "#98B4D4", sellable = false });
 
+            // ---------------- Trainer melee weapons (overworld) ----------------
+            // A five-rung ladder per weapon kind, Normal → Legendary. The item
+            // carries only its kind and its tier: damage is the kind's base
+            // (PlayerCombat.ClubDmg … AxeDmg) times ItemRarity.WeaponMultiplier,
+            // so the numbers live in one place and the ladder cannot drift out
+            // of order. Descriptions stay qualitative for the same reason.
+            // Blade — 14 base, the quickest heavy hit.
+            W("wpn_blade", "Copper Blade", PlayerWeaponKind.Blade, Rarity.Normal, 90, "#E08D57",
+              "Trainer weapon: a keen medium swing, Smith-forged.");
+            W("wpn_blade_uncommon", "Honed Blade", PlayerWeaponKind.Blade, Rarity.Uncommon, 210, "#D8A46A",
+              "Trainer weapon: a honed edge that bites deeper than copper.");
+            W("wpn_blade_rare", "Keenblade", PlayerWeaponKind.Blade, Rarity.Rare, 430, "#8CC8E8",
+              "Trainer weapon: folded steel, thin as a promise.");
+            W("wpn_blade_epic", "Stormcleaver", PlayerWeaponKind.Blade, Rarity.Epic, 820, "#A88CE8",
+              "Trainer weapon: the ridge's lightning, coaxed into an edge.");
+            W("wpn_blade_legendary", "Emberwake", PlayerWeaponKind.Blade, Rarity.Legendary, 1500, "#F2A33C",
+              "Trainer weapon: a blade that remembers the fire it was born in.");
+
+            // Spear — 11 base, the longest reach.
+            W("wpn_spear", "Longspear", PlayerWeaponKind.Spear, Rarity.Normal, 65, "#A8B0B8",
+              "Trainer weapon: long reach. Keeps the fangs at arm's length.");
+            W("wpn_spear_uncommon", "Barbed Pike", PlayerWeaponKind.Spear, Rarity.Uncommon, 170, "#9CB4B0",
+              "Trainer weapon: barbed, so nothing shrugs it off.");
+            W("wpn_spear_rare", "Ridge Lance", PlayerWeaponKind.Spear, Rarity.Rare, 360, "#7FB8D8",
+              "Trainer weapon: a rider's lance re-cut for the ridge.");
+            W("wpn_spear_epic", "Skyfang Lance", PlayerWeaponKind.Spear, Rarity.Epic, 700, "#B09CE8",
+              "Trainer weapon: long enough to argue with something twice your size.");
+            W("wpn_spear_legendary", "Dawnpiercer", PlayerWeaponKind.Spear, Rarity.Legendary, 1300, "#F2C33C",
+              "Trainer weapon: it goes first, and it goes furthest.");
+
+            // Axe — 20 base, the heaviest hit and the slowest swing.
+            W("wpn_axe", "Vale Axe", PlayerWeaponKind.Axe, Rarity.Normal, 150, "#B08968",
+              "Trainer weapon: heavy. Splits logs; makes do with hide.");
+            W("wpn_axe_uncommon", "Ironbark Axe", PlayerWeaponKind.Axe, Rarity.Uncommon, 300, "#A08A62",
+              "Trainer weapon: an ironwood haft that will not jar your wrists.");
+            W("wpn_axe_rare", "Rift Splitter", PlayerWeaponKind.Axe, Rarity.Rare, 560, "#88A8C8",
+              "Trainer weapon: quarried from the ridge's own split stone.");
+            W("wpn_axe_epic", "Thundercleave", PlayerWeaponKind.Axe, Rarity.Epic, 1000, "#A87CE8",
+              "Trainer weapon: swings like weather coming down a valley.");
+            W("wpn_axe_legendary", "Valesplinter", PlayerWeaponKind.Axe, Rarity.Legendary, 1800, "#F2A33C",
+              "Trainer weapon: the axe the Vale tells stories about.");
+
+            // Club — 8 base, the cheap honest starter.
+            W("wpn_club", "Oaken Club", PlayerWeaponKind.Club, Rarity.Normal, 30, "#8A5E33",
+              "Trainer weapon: an honest branch with intent.");
+            W("wpn_club_uncommon", "Ironwood Club", PlayerWeaponKind.Club, Rarity.Uncommon, 90, "#7E8F5A",
+              "Trainer weapon: ironwood — dull, dense, dependable.");
+            W("wpn_club_rare", "Emberwillow Cudgel", PlayerWeaponKind.Club, Rarity.Rare, 200, "#93B0D8",
+              "Trainer weapon: warm to the grip, even in the rain.");
+            W("wpn_club_epic", "Stoneheart Maul", PlayerWeaponKind.Club, Rarity.Epic, 420, "#B79CE8",
+              "Trainer weapon: a monolith shard on a rope-wrapped haft.");
+            W("wpn_club_legendary", "Heartwood Worldbreaker", PlayerWeaponKind.Club, Rarity.Legendary, 800, "#F2B33C",
+              "Trainer weapon: cut from the tree the Hollow grew around.");
+
+            // ---------------- Player armour (body slot) ----------------
+            // Worn by the trainer, not a creature. "def+N" is flat damage
+            // taken off every hit a wild creature lands (PlayerCombat.Mitigate),
+            // "hp+N" raises the trainer's health pool. One piece per tier.
+            A("arm_padded", "Padded Jerkin", Rarity.Normal, 60, "def+2|hp+8", "#B08968",
+              "Armour: quilted cloth. Turns a claw into a bruise.");
+            A("arm_boiled", "Boiled Leather Vest", Rarity.Uncommon, 180, "def+4|hp+16", "#8A9A5B",
+              "Armour: hardened hide, waxed until it rings.");
+            A("arm_scale", "Mailscale Hauberk", Rarity.Rare, 380, "def+7|hp+26", "#7FA8D8",
+              "Armour: overlapping scales, each one riveted by hand.");
+            A("arm_plate", "Embersteel Plate", Rarity.Epic, 720, "def+11|hp+38", "#A08CE8",
+              "Armour: forge-quenched plate with a ridge-forged temper.");
+            A("arm_aegis", "Verdant Aegis", Rarity.Legendary, 1400, "def+16|hp+52", "#F2A33C",
+              "Armour: living bark over steel. The Vale's own answer to claws.");
+
             // ---------------- Creature gear (weapons & armor) ----------------
             // equipBonus segments: atk+ / def+ / spd+ / hp+; primary segment first.
             Add(new ItemDef { id = "gear_claw", name = "Bone Claw", desc = "Creature weapon: +3 ATK.", kind = ItemKind.Equipment, basePrice = 35, equipBonus = "atk+3", iconColorHex = "#E4DCC8", sellable = true });
@@ -86,6 +155,68 @@ namespace PokeProfessions.Core
             Recipes.Add(new Recipe { id = "r_lure", resultItemId = "lure_charm", resultCount = 1, profession = ProfessionId.Tailor, requiredLevel = 5, xpReward = 30, station = "workbench", inputs = { new ItemStack { itemId = "gildfish", count = 1 }, new ItemStack { itemId = "cloth", count = 2 }, new ItemStack { itemId = "glowcap", count = 1 } } });
             Recipes.Add(new Recipe { id = "r_scout", resultItemId = "scout_band", resultCount = 1, profession = ProfessionId.Tailor, requiredLevel = 5, xpReward = 30, station = "workbench", inputs = { new ItemStack { itemId = "cloth", count = 2 }, new ItemStack { itemId = "iron_bar", count = 1 }, new ItemStack { itemId = "moonshard", count = 1 } } });
 
+            // ---------------- Weaponsmith recipes: the weapon ladder ----------------
+            // One recipe per kind per tier. The tier sets BOTH the profession
+            // level (2/4/6/8/10 — two a rung) and the materials, which climb from
+            // fibre-and-stone to moonshard-and-gildfish. That makes the top rungs
+            // genuinely late-game: moonshard only comes off the Hollow Monolith
+            // (Miner 6) or a Snorlax jackpot, and gildfish is a rare lake catch.
+            // Each kind keeps the trade that has always forged it.
+            RW("r_wpn_club", "wpn_club", ProfessionId.Forager, 2, 8, S("fiber", 2), S("stone", 1));
+            RW("r_wpn_club_uncommon", "wpn_club_uncommon", ProfessionId.Forager, 4, 45,
+               S("fiber", 4), S("iron_bar", 1), S("rope", 2));
+            RW("r_wpn_club_rare", "wpn_club_rare", ProfessionId.Forager, 6, 75,
+               S("iron_bar", 2), S("rope", 2), S("fiber", 4), S("emberpepper", 2));
+            RW("r_wpn_club_epic", "wpn_club_epic", ProfessionId.Forager, 8, 115,
+               S("iron_bar", 3), S("moonshard", 1), S("fiber", 4), S("cloth", 2));
+            RW("r_wpn_club_legendary", "wpn_club_legendary", ProfessionId.Forager, 10, 170,
+               S("iron_bar", 4), S("moonshard", 2), S("gildfish", 1), S("glowcap", 3));
+
+            RW("r_wpn_blade", "wpn_blade", ProfessionId.Smith, 2, 20, S("copper_bar", 2), S("rope", 1));
+            RW("r_wpn_blade_uncommon", "wpn_blade_uncommon", ProfessionId.Smith, 4, 45,
+               S("iron_bar", 2), S("copper_bar", 1), S("rope", 1));
+            RW("r_wpn_blade_rare", "wpn_blade_rare", ProfessionId.Smith, 6, 75,
+               S("iron_bar", 2), S("cloth", 2), S("rope", 1), S("emberpepper", 2));
+            RW("r_wpn_blade_epic", "wpn_blade_epic", ProfessionId.Smith, 8, 115,
+               S("iron_bar", 3), S("moonshard", 1), S("cloth", 2), S("copper_bar", 2));
+            RW("r_wpn_blade_legendary", "wpn_blade_legendary", ProfessionId.Smith, 10, 170,
+               S("iron_bar", 4), S("moonshard", 2), S("gildfish", 1), S("emberpepper", 3));
+
+            RW("r_wpn_spear", "wpn_spear", ProfessionId.Tailor, 2, 16,
+               S("rope", 1), S("copper_bar", 1), S("fiber", 2));
+            RW("r_wpn_spear_uncommon", "wpn_spear_uncommon", ProfessionId.Tailor, 4, 45,
+               S("iron_bar", 1), S("rope", 2), S("copper_bar", 1), S("fiber", 2));
+            RW("r_wpn_spear_rare", "wpn_spear_rare", ProfessionId.Tailor, 6, 75,
+               S("iron_bar", 2), S("rope", 2), S("cloth", 2), S("emberpepper", 1));
+            RW("r_wpn_spear_epic", "wpn_spear_epic", ProfessionId.Tailor, 8, 115,
+               S("iron_bar", 3), S("moonshard", 1), S("rope", 2), S("cloth", 2));
+            RW("r_wpn_spear_legendary", "wpn_spear_legendary", ProfessionId.Tailor, 10, 170,
+               S("iron_bar", 4), S("moonshard", 2), S("gildfish", 1), S("glowcap", 2), S("cloth", 2));
+
+            RW("r_wpn_axe", "wpn_axe", ProfessionId.Smith, 2, 40,
+               S("iron_bar", 2), S("rope", 1), S("fiber", 2));
+            RW("r_wpn_axe_uncommon", "wpn_axe_uncommon", ProfessionId.Smith, 4, 45,
+               S("iron_bar", 2), S("copper_bar", 1), S("rope", 1), S("fiber", 2));
+            RW("r_wpn_axe_rare", "wpn_axe_rare", ProfessionId.Smith, 6, 75,
+               S("iron_bar", 3), S("rope", 1), S("cloth", 2), S("emberpepper", 2));
+            RW("r_wpn_axe_epic", "wpn_axe_epic", ProfessionId.Smith, 8, 115,
+               S("iron_bar", 4), S("moonshard", 1), S("cloth", 2), S("rope", 1));
+            RW("r_wpn_axe_legendary", "wpn_axe_legendary", ProfessionId.Smith, 10, 170,
+               S("iron_bar", 5), S("moonshard", 2), S("gildfish", 1), S("emberpepper", 3));
+
+            // ---------------- Armourer recipes: the armour ladder ----------------
+            // Same five rungs, one piece per tier, forged by the Smith. "def+N"
+            // is flat damage taken off every wild hit, "hp+N" raises the pool.
+            RA("r_arm_padded", "arm_padded", 2, 25, S("fiber", 4), S("rope", 2));
+            RA("r_arm_boiled", "arm_boiled", 4, 50,
+               S("cloth", 2), S("rope", 2), S("copper_bar", 1));
+            RA("r_arm_scale", "arm_scale", 6, 80,
+               S("cloth", 3), S("iron_bar", 2), S("rope", 1));
+            RA("r_arm_plate", "arm_plate", 8, 120,
+               S("iron_bar", 3), S("cloth", 2), S("moonshard", 1));
+            RA("r_arm_aegis", "arm_aegis", 10, 180,
+               S("iron_bar", 4), S("moonshard", 2), S("glowcap", 3), S("gildfish", 1));
+
             // ---------------- Creature gear recipes ----------------
             Recipes.Add(new Recipe { id = "r_gear_claw", resultItemId = "gear_claw", resultCount = 1, profession = ProfessionId.Smith, requiredLevel = 1, xpReward = 12, station = "forge", inputs = { new ItemStack { itemId = "copper_bar", count = 1 }, new ItemStack { itemId = "stone", count = 2 } } });
             Recipes.Add(new Recipe { id = "r_gear_fang", resultItemId = "gear_fang", resultCount = 1, profession = ProfessionId.Smith, requiredLevel = 3, xpReward = 22, station = "forge", inputs = { new ItemStack { itemId = "iron_bar", count = 1 }, new ItemStack { itemId = "emberpepper", count = 2 }, new ItemStack { itemId = "rope", count = 1 } } });
@@ -98,10 +229,72 @@ namespace PokeProfessions.Core
 
         private static void Add(ItemDef d) => All[d.id] = d;
 
+        /// <summary>Player melee weapon at a tier — see ItemRarity for the damage ladder.</summary>
+        private static void W(string id, string name, PlayerWeaponKind kind, Rarity r,
+                              int price, string hex, string desc)
+        {
+            Add(new ItemDef
+            {
+                id = id, name = name, desc = desc, kind = ItemKind.Equipment,
+                basePrice = price, playerWeaponKind = kind, rarity = r, iconColorHex = hex
+            });
+        }
+
+        /// <summary>Player body armour at a tier; bonus is "def+N|hp+N".</summary>
+        private static void A(string id, string name, Rarity r, int price, string bonus,
+                              string hex, string desc)
+        {
+            Add(new ItemDef
+            {
+                id = id, name = name, desc = desc, kind = ItemKind.Equipment,
+                basePrice = price, equipBonus = bonus, rarity = r, iconColorHex = hex
+            });
+        }
+
+        static ItemStack S(string itemId, int count) { return new ItemStack { itemId = itemId, count = count }; }
+
+        /// <summary>A Weaponsmith recipe (the station is implied by the ladder).</summary>
+        private static void RW(string id, string weaponId, ProfessionId prof, int lvl, int xp,
+                               params ItemStack[] inputs)
+        {
+            var r = new Recipe
+            {
+                id = id, resultItemId = weaponId, resultCount = 1, profession = prof,
+                requiredLevel = lvl, xpReward = xp, station = "weaponsmith"
+            };
+            r.inputs.AddRange(inputs);
+            Recipes.Add(r);
+        }
+
+        /// <summary>An Armourer recipe (Smith work, at the Armourer's Stand).</summary>
+        private static void RA(string id, string armorId, int lvl, int xp, params ItemStack[] inputs)
+        {
+            var r = new Recipe
+            {
+                id = id, resultItemId = armorId, resultCount = 1, profession = ProfessionId.Smith,
+                requiredLevel = lvl, xpReward = xp, station = "armorer"
+            };
+            r.inputs.AddRange(inputs);
+            Recipes.Add(r);
+        }
+
         public static ItemDef Get(string id)
         {
             ItemDef d;
             return All != null && All.TryGetValue(id, out d) ? d : null;
+        }
+
+        /// <summary>
+        /// The recipe that produces this item, or null. One result has one recipe in
+        /// this game, so the first match is the only match — used by the gear panel to
+        /// say where a rung you have not reached can be made.
+        /// </summary>
+        public static Recipe RecipeFor(string resultItemId)
+        {
+            if (Recipes == null || string.IsNullOrEmpty(resultItemId)) return null;
+            foreach (var r in Recipes)
+                if (r != null && r.resultItemId == resultItemId) return r;
+            return null;
         }
 
         public static string Name(string id)
@@ -120,6 +313,31 @@ namespace PokeProfessions.Core
 
         /// <summary>Trainer equipment: one may be equipped at a time via GameState.equippedItem.</summary>
         public static readonly string[] TrainerGear = { "forager_gloves", "miner_pick", "angler_rod", "lure_charm", "scout_band" };
+
+        /// <summary>
+        /// Every trainer melee weapon, grouped by kind and walking the rarity
+        /// ladder (Normal → Legendary). PlayerGear indexes this by kind+tier, so
+        /// a rung missing here shows up as an unauthored recipe rather than a
+        /// silently unbuildable item — EditorPlaytest asserts the ladder is
+        /// complete for all four kinds.
+        /// </summary>
+        public static readonly string[] PlayerWeapons =
+        {
+            // Blade
+            "wpn_blade", "wpn_blade_uncommon", "wpn_blade_rare", "wpn_blade_epic", "wpn_blade_legendary",
+            // Spear
+            "wpn_spear", "wpn_spear_uncommon", "wpn_spear_rare", "wpn_spear_epic", "wpn_spear_legendary",
+            // Axe
+            "wpn_axe", "wpn_axe_uncommon", "wpn_axe_rare", "wpn_axe_epic", "wpn_axe_legendary",
+            // Club
+            "wpn_club", "wpn_club_uncommon", "wpn_club_rare", "wpn_club_epic", "wpn_club_legendary"
+        };
+
+        /// <summary>Trainer body armour, weakest tier first (see PlayerGear.Armors).</summary>
+        public static readonly string[] PlayerArmors =
+        {
+            "arm_padded", "arm_boiled", "arm_scale", "arm_plate", "arm_aegis"
+        };
 
         /// <summary>Use-on-creature consumables in priority order (best fit first).</summary>
         public static readonly string[] HealOrder = { "revive_tonic", "hearty_stew", "spice_bun", "salve", "trail_snack", "purge_draught" };

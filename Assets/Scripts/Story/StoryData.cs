@@ -123,6 +123,7 @@ namespace PokeProfessions.Core
             Npc("juna", "Juna", "Professions Warden", "#C9A0DC", "meadow", new[] { "juna_intro", "juna_loop" });
             Npc("brann", "Brann", "Smith", "#B0653A", "meadow", new[] { "brann_intro", "brann_accept", "brann_decline", "brann_loop" });
             Npc("odessa", "Odessa", "Ranger Captain", "#5A7FBF", "meadow", new[] { "odessa_intro", "odessa_yes", "odessa_no", "odessa_loop" });
+            Npc("hask", "Hask", "Quartermaster", "#C88A4A", "meadow", new[] { "hask_intro", "hask_loop" });
             Npc("tobin", "Tobin", "Young Trainer", "#E0C060", "meadow", new[] { "tobin_fight", "tobin_loop" });
             Npc("sela", "Sela", "Herbalist", "#7FBF9E", "ridge", new[] { "sela_intro", "sela_yes", "sela_no", "sela_loop" });
             Npc("korrin", "Korrin", "Prospector", "#8A6F5A", "ridge", new[] { "korrin_fight", "korrin_loop" });
@@ -136,6 +137,18 @@ namespace PokeProfessions.Core
                 "core_wood:6", "core_iron:3", "trail_snack:8", "salve:6", "purge_draught:4",
                 "rope:5", "fiber:-1", "bitterleaf:-1", "stone:-1",
                 "gear_claw:2", "gear_band:2", "gear_fang:1", "gear_hide:1" });
+
+            // Hask's armoury — the trainer's own weapons and body armour, sold
+            // rather than only forged. His rack is NOT this list: StoryData.StockFor
+            // rebuilds it from story progress (ArmouryStock), opening on the two
+            // starter tiers and adding Rare/Epic/Legendary as the Vale does, so the
+            // higher rungs still reward crafting but can be bought later on. This
+            // authored list is the fallback if that ever fails to build.
+            Shop("armory", "Hask's Armoury", new[] {
+                "wpn_club:1", "wpn_blade:1", "wpn_spear:1", "wpn_axe:1",
+                "wpn_club_uncommon:1", "wpn_blade_uncommon:1", "wpn_spear_uncommon:1", "wpn_axe_uncommon:1",
+                "arm_padded:1", "arm_boiled:1",
+                "trail_snack:6", "salve:4" });
 
             // ================= QUESTS =================
             Q(new QuestDef
@@ -291,6 +304,13 @@ namespace PokeProfessions.Core
             Node("odessa_loop",
                 new DialogueLine { speaker = "Odessa", text = "The Hollow... my grandmother spoke of it like weather. Something that just happens to the Vale, when it happens.", endRule = "end" });
 
+            // --- Hask, quartermaster (sells the trainer's own weapons & armour) ---
+            Node("hask_intro",
+                new DialogueLine { speaker = "Hask", text = "A trainer with empty hands has short arms. I keep the Vale's armoury stocked for the road.", endRule = "" },
+                new DialogueLine { speaker = "Hask", text = "Blades, spears, axes, clubs — and a jerkin that'll keep claws out of your ribs. Have a look.", openShop = "armory", endRule = "end" });
+            Node("hask_loop",
+                new DialogueLine { speaker = "Hask", text = "Back at the rack? I can sell you the first rungs; the rest you'll have to forge yourself.", openShop = "armory", endRule = "end" });
+
             // --- Tobin, rival ---
             Node("tobin_fight",
                 new DialogueLine { speaker = "Tobin", text = "Heard you caught something! Ranch rules: we battle to see whose meadow education stuck. Let's go!", spawnTrainer = "trainer_tobin", endRule = "end" });
@@ -406,6 +426,102 @@ namespace PokeProfessions.Core
         static void Shop(string id, string name, string[] stock)
         {
             Shops[id] = new ShopDef { id = id, name = name, stock = stock };
+        }
+
+        // ---------------- shop stock ----------------
+
+        /// <summary>
+        /// The stock a shop offers this save. Most shops are a fixed authored list;
+        /// the armoury is the exception and is rebuilt from story progress (see
+        /// ArmouryStock). Every caller goes through here — ShopPanel does — so the
+        /// panel and the data can never disagree about what is for sale.
+        /// </summary>
+        public static string[] StockFor(ShopDef def, GameState state)
+        {
+            if (def == null) return new string[0];
+            if (def.id == "armory")
+            {
+                var built = ArmouryStock(state);
+                return built.Length > 0 ? built : (def.stock ?? new string[0]);
+            }
+            return def.stock ?? new string[0];
+        }
+
+        /// <summary>Whether a shop's current (story-gated) stock includes an item.</summary>
+        public static bool Stocks(string shopId, string itemId, GameState state)
+        {
+            ShopDef def;
+            if (Shops == null || !Shops.TryGetValue(shopId, out def)) return false;
+            foreach (var entry in StockFor(def, state))
+                if (entry.Split(':')[0] == itemId) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Hask's rack, which grows with the story. A quartermaster can only deal a
+        /// rung he can actually get hold of, so the armoury opens on the two starter
+        /// tiers and gains one more as the Vale opens up: Rare once the ridge does,
+        /// Epic once the sigil is assembled, and the Legendary rungs only after the
+        /// Sleeper is woken. Buying still costs full price and the professions remain
+        /// the cheaper route to the same rungs — the trade is convenience, not a way
+        /// around crafting.
+        /// </summary>
+        static string[] ArmouryStock(GameState state)
+        {
+            int maxTier = ArmouryTier(state);   // 1-based: 2 = the starter rack
+            var list = new List<string>();
+
+            foreach (var id in ItemDB.PlayerWeapons) AddTiered(list, id, maxTier);
+            foreach (var id in ItemDB.PlayerArmors) AddTiered(list, id, maxTier);
+
+            // staples, on the counter from the first visit
+            list.Add("trail_snack:6");
+            list.Add("salve:4");
+            return list.ToArray();
+        }
+
+        /// <summary>Add a gear item to a stock list when its rung is one Hask deals.</summary>
+        static void AddTiered(List<string> list, string itemId, int maxTier)
+        {
+            var d = ItemDB.Get(itemId);
+            if (d == null) return;
+            if ((int)d.rarity + 1 <= maxTier) list.Add(itemId + ":1");
+        }
+
+        /// <summary>
+        /// The gate for each rung above the armoury's starter two, cheapest first.
+        /// ArmouryTier and the shop's locked-tier hint both read this one table, so
+        /// the rack and the hint can never disagree about what opens when.
+        /// </summary>
+        static readonly (Rarity tier, string flag, string hint)[] ArmouryGates =
+        {
+            (Rarity.Rare,      "ridge_opened",  "Rare gear unlocks as the Vale opens up — cross to Emberrock Ridge."),
+            (Rarity.Epic,      "has_sigil",     "Epic gear unlocks once the Verdant Sigil is assembled."),
+            (Rarity.Legendary, "sleeper_awake", "Legendary gear unlocks after the Sleeper is woken."),
+        };
+
+        /// <summary>How far up the gear ladder the armoury deals, from the story flags.</summary>
+        static int ArmouryTier(GameState state)
+        {
+            int tier = 2;                                    // Normal + Uncommon, always
+            foreach (var g in ArmouryGates)
+                if (state != null && state.HasFlag(g.flag)) tier = (int)g.tier + 1;
+            return tier;
+        }
+
+        /// <summary>
+        /// The rungs a shop cannot deal yet, each with the story beat that opens it —
+        /// so the shop can tell the player the rack grows rather than leaving the
+        /// missing tiers looking like a short ladder. Only the armoury is gated;
+        /// every other shop returns an empty list.
+        /// </summary>
+        public static List<string> StockHints(ShopDef def, GameState state)
+        {
+            var hints = new List<string>();
+            if (def == null || def.id != "armory") return hints;
+            foreach (var g in ArmouryGates)
+                if (state == null || !state.HasFlag(g.flag)) hints.Add(g.hint);
+            return hints;
         }
 
         static void Q(QuestDef q) => Quests[q.id] = q;

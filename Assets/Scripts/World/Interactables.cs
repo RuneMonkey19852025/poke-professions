@@ -105,6 +105,7 @@ namespace PokeProfessions.World
             Part(root, PrimitiveType.Sphere, new Vector3(0.3f, 0.62f, 0.35f), new Vector3(0.14f, 0.14f, 0.14f), fruit);
             Part(root, PrimitiveType.Sphere, new Vector3(-0.28f, 0.5f, 0.4f), new Vector3(0.12f, 0.12f, 0.12f), fruit);
             Part(root, PrimitiveType.Sphere, new Vector3(0.05f, 0.72f, -0.3f), new Vector3(0.13f, 0.13f, 0.13f), fruit);
+            NatureKit.Decorate(root, "bush", 1.05f);
             return root;
         }
 
@@ -120,6 +121,7 @@ namespace PokeProfessions.World
             Part(root, PrimitiveType.Sphere, new Vector3(0.2f, 0.72f, 0.25f), new Vector3(0.16f, 0.12f, 0.14f), ore);
             Part(root, PrimitiveType.Sphere, new Vector3(-0.3f, 0.55f, -0.2f), new Vector3(0.13f, 0.1f, 0.12f), ore);
             Part(root, PrimitiveType.Sphere, new Vector3(0.42f, 0.4f, -0.05f), new Vector3(0.11f, 0.09f, 0.1f), ore);
+            NatureKit.Decorate(root, "rock", 1.05f);
             return root;
         }
 
@@ -131,6 +133,7 @@ namespace PokeProfessions.World
             Part(root, PrimitiveType.Cylinder, new Vector3(0f, 0.04f, 0f), new Vector3(1.1f, 0.015f, 1.1f), "#5FA0CC");
             Part(root, PrimitiveType.Cylinder, new Vector3(0f, 0.055f, 0f), new Vector3(0.55f, 0.012f, 0.55f), "#8FC8E0");
             Part(root, PrimitiveType.Sphere, new Vector3(0.15f, 0.14f, 0.1f), new Vector3(0.16f, 0.16f, 0.16f), "#E85848");
+            NatureKit.Decorate(root, "shore", 1.15f);
             return root;
         }
 
@@ -224,6 +227,9 @@ namespace PokeProfessions.World
             if (s == "forge") return "Forge";
             if (s == "campfire") return "Campfire";
             if (s == "workbench") return "Workbench";
+            if (s == "weaponsmith") return "Weaponsmith's Bench";
+            if (s == "armorer") return "Armourer's Stand";
+            if (s == "gear_table") return "Gearwright's Table";
             return s;
         }
 

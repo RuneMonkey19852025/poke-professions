@@ -767,6 +767,16 @@ namespace PokeProfessions.World
             ScatterRocks("meadow", 10, new Vector2(-32, 32), new Vector2(-32, 32), (x, z) => InTownPad(x, z));
             ScatterRocks("ridge", 18, new Vector2(46, 95), new Vector2(-10, 42));
 
+            // Quaternius nature-kit undergrowth (no-ops when the kit is absent)
+            ScatterUndergrowth("meadow", 70, new Vector2(-32, 32), new Vector2(-32, 32),
+                new[] { "Grass_Common_Tall", "Grass_Wispy_Tall", "Grass_Common_Short", "Fern_1", "Bush_Common", "Bush_Common_Flowers", "Flower_3_Single", "Flower_4_Single", "Mushroom_Common" }, (x, z) => InTownPad(x, z));
+            ScatterUndergrowth("ridge", 40, new Vector2(46, 95), new Vector2(-10, 42),
+                new[] { "Grass_Wispy_Short", "Grass_Wispy_Tall", "Pebble_Round_1", "Pebble_Round_2", "Pebble_Square_3", "DeadTree_2", "Bush_Common" });
+            ScatterUndergrowth("hollow", 70, new Vector2(-12, 32), new Vector2(58, 92),
+                new[] { "Fern_1", "Grass_Common_Tall", "Mushroom_Common", "Mushroom_Laetiporus", "Bush_Common", "Plant_1", "Plant_7", "Clover_1", "Clover_2" });
+            ScatterUndergrowth("lake", 40, new Vector2(-20, 20), new Vector2(34, 54),
+                new[] { "Grass_Wispy_Tall", "Petal_1", "Petal_2", "Flower_3_Single", "Clover_1", "Grass_Common_Short" });
+
             // gathering nodes
             // Lv0 starter nodes: a dooryard garden row along the south fence,
             // plus the pebble/creek pair near the plaza — gatherable at lv0
@@ -794,6 +804,29 @@ namespace PokeProfessions.World
             SpawnNode("rock_iron", new Vector3(84, 0, 18));
             SpawnNode("rock_moon", new Vector3(55, 0, 82));
 
+            // The start area's own mining. Two Lv2 outcrop quarries flank
+            // Emberpost — one behind the homes, one along the east road — so
+            // copper/iron are workable from spawn rather than only out on the
+            // ridge. A few extra Lv0/Lv1 rocks give a new Miner something to
+            // level on. All sit inside the town pad, clear of every building,
+            // fence, NPC and melee target.
+            SpawnNode("rock_pebble", new Vector3(-20, 0, -14));
+            SpawnNode("rock_pebble", new Vector3(28, 0, -5));
+            SpawnNode("rock_stone", new Vector3(18, 0, -30));
+            SpawnNode("rock_stone", new Vector3(-14, 0, -34));
+            SpawnNode("rock_stone", new Vector3(26, 0, -35));
+
+            // west quarry — along the fence line behind the west homes
+            SpawnNode("rock_iron_shallow", new Vector3(-29, 0, -13));
+            SpawnNode("rock_iron_shallow", new Vector3(-27, 0, -20));
+            SpawnNode("rock_copper_shallow", new Vector3(-29, 0, -27));
+            SpawnNode("rock_copper_shallow", new Vector3(-31, 0, -34));
+
+            // east quarry — the outcrop the east road runs past
+            SpawnNode("rock_iron_shallow", new Vector3(30, 0, -13));
+            SpawnNode("rock_iron_shallow", new Vector3(21, 0, -27));
+            SpawnNode("rock_copper_shallow", new Vector3(32, 0, -31));
+
             SpawnNode("spot_river", new Vector3(-30, 0, -40));
             SpawnNode("spot_river", new Vector3(-2, 0, -46));
             SpawnNode("spot_lake", new Vector3(-8, 0, -62));
@@ -802,6 +835,15 @@ namespace PokeProfessions.World
             SpawnStation("forge", "Brann's Forge", new Vector3(-16.4f, 0, -12.2f), "#8A4A30");
             SpawnStation("campfire", "Emberpost Hearth", new Vector3(4.8f, 0, -8.2f), "#D06A30");
             SpawnStation("workbench", "Post Workbench", new Vector3(16.4f, 0, -12.2f), "#7A6A50");
+            // Character gear benches: the two that walk the Normal → Legendary
+            // ladder. Flanking the plaza's north row, a clear 7u off the forge and
+            // workbench, so the crafting cluster reads as one street of trades.
+            SpawnStation("weaponsmith", "Weaponsmith's Bench", new Vector3(-16.4f, 0, -5f), "#8A8E96");
+            SpawnStation("armorer", "Armourer's Stand", new Vector3(16.4f, 0, -5f), "#7E6A9C");
+            // The generalist: one bench that will work both gear ladders, set on the
+            // plaza's north row between the two specialist benches so a trainer who
+            // just wants gear has one obvious table to walk up to.
+            SpawnStation("gear_table", "Gearwright's Table", new Vector3(-8.2f, 0, -3f), "#8A7A5A");
 
             // shop — west side, clear of the spawn vista
             SpawnShop("general", "Vale Post Traders", new Vector3(-8.2f, 0, -16.8f));
@@ -813,12 +855,15 @@ namespace PokeProfessions.World
             // (center slab), turned to face the player walking up from spawn
             SpawnSlotsMachine(new Vector3(0f, 0f, -7.37f), 180f);
 
+            SpawnMeleeTargets();
+
             // NPCs — townfolk in Emberpost, wanderers further afield
             // (the Sleeper spawns later via story flag)
             SpawnNpc("maren", new Vector3(7.5f, 0, -14.6f));   // by her stall, east plaza
             SpawnNpc("brann", new Vector3(-13.6f, 0, -10.8f)); // tending his forge
             SpawnNpc("juna", new Vector3(-5.2f, 0, -13.4f));   // by the traders' stall
             SpawnNpc("odessa", new Vector3(2.4f, 0, 4.6f));    // beneath the bell tower
+            SpawnNpc("hask", new Vector3(-9f, 0, -20.6f));     // armoury trader, by the market row
             SpawnNpc("pell", new Vector3(-18.5f, 0, -23.5f));  // porch of the ranger post
             SpawnNpc("mira", new Vector3(-4.9f, 0, -7.0f));    // tending the well
             SpawnNpc("tobin", new Vector3(26f, 0, -26f));      // east road out of town
@@ -827,6 +872,44 @@ namespace PokeProfessions.World
             SpawnNpc("vesna", new Vector3(-12, 0, -58));
             SpawnNpc("hollis", new Vector3(6, 0, -60));
             SpawnNpc("zephy", new Vector3(14, 0, 66));
+        }
+
+        // ================= overworld melee targets =================
+        // Wild creatures to whack with trainer weapons. Kept out of the town
+        // pad; a couple of starters near town, bigger ones further afield.
+        void SpawnMeleeTargets()
+        {
+            // tutorial pair on the east road (like Tobin's spot)
+            SpawnTarget("sprigling", 3, new Vector3(30f, 0f, -24f));
+            SpawnTarget("thornpaw", 4, new Vector3(34f, 0f, -18f));
+
+            // meadow spread
+            SpawnTarget("burrowmouse", 4, new Vector3(-30f, 0f, 8f));
+            SpawnTarget("flitwing", 5, new Vector3(18f, 0f, 24f));
+            SpawnTarget("puddlepup", 6, new Vector3(-24f, 0f, -32f));
+
+            // ridge — rocky brutes
+            SpawnTarget("cindercub", 9, new Vector3(56f, 0f, 6f));
+            SpawnTarget("magmite", 10, new Vector3(78f, 0f, 34f));
+            SpawnTarget("pyrelynx", 12, new Vector3(88f, 0f, 8f));
+
+            // lake shore
+            SpawnTarget("glimmfish", 7, new Vector3(-30f, 0f, -58f));
+            SpawnTarget("lilypad", 9, new Vector3(8f, 0f, -66f));
+
+            // hollow
+            SpawnTarget("gloomcap", 12, new Vector3(0f, 0f, 70f));
+            SpawnTarget("frostwisp", 15, new Vector3(24f, 0f, 84f));
+            SpawnTarget("dreamora", 16, new Vector3(40f, 0f, 70f));
+        }
+
+        void SpawnTarget(string speciesId, int level, Vector3 xz)
+        {
+            if (CreatureDB.Get(speciesId) == null) return;
+            var c = MonsterFactory.Create(speciesId, level);
+            if (c == null) return;
+            var t = MeleeTarget.Spawn(c, xz);
+            if (t != null) spawned.Add(t.gameObject);
         }
 
         public GameObject SpawnNpc(string npcId, Vector3 xz)
@@ -844,7 +927,7 @@ namespace PokeProfessions.World
             var model = ModelLoader.Instantiate(npcPath, go.transform, 1f);
             if (model != null)
             {
-                model.transform.localPosition = Vector3.zero;
+                // (ground-aligned by ModelLoader.Instantiate)
                 var col0 = go.AddComponent<CapsuleCollider>();
                 col0.height = 2.4f; col0.radius = 0.8f; col0.center = new Vector3(0, 1.1f, 0);
                 AddBlobShadow(go.transform, 0.55f);
@@ -923,6 +1006,27 @@ namespace PokeProfessions.World
             var col = sh.GetComponent<Collider>(); if (col != null) Destroy(col);
         }
 
+        /// <summary>
+        /// Spawn a Quaternius nature-kit tree under the tree anchor.
+        /// Returns false when the kit is missing so the procedural tree is used.
+        /// </summary>
+        bool TrySpawnKitTree(Transform parent, string zone)
+        {
+            if (!NatureKit.Available) return false;
+            string[] pool;
+            switch (zone)
+            {
+                case "ridge":  pool = new[] { "DeadTree_1", "DeadTree_2", "DeadTree_3", "DeadTree_4", "TwistedTree_1", "TwistedTree_2", "TwistedTree_3", "CommonTree_1", "CommonTree_2" }; break;
+                case "hollow": pool = new[] { "Pine_1", "Pine_2", "Pine_3", "Pine_4", "Pine_5", "TwistedTree_4", "TwistedTree_5" }; break;
+                default:       pool = new[] { "CommonTree_1", "CommonTree_2", "CommonTree_3", "CommonTree_4", "CommonTree_5" }; break;
+            }
+            var name = NatureKit.Pick(pool);
+            var t = NatureKit.Spawn(parent, name, Vector3.zero,
+                                    NatureKit.TargetSize(name) * Random.Range(0.85f, 1.15f),
+                                    Random.Range(0f, 360f));
+            return t != null;
+        }
+
         /// <summary>Scattered decorative rocks.</summary>
         void ScatterRocks(string zone, int count, Vector2 x, Vector2 z, System.Func<float, float, bool> exclude = null)
         {
@@ -941,6 +1045,30 @@ namespace PokeProfessions.World
                 rock.transform.localScale = new Vector3(rs, rs * 0.7f, rs * Random.Range(0.7f, 1.2f));
                 rock.GetComponent<MeshRenderer>().material = ToonMat("#8E8A80");
                 spawned.Add(rock);
+            }
+        }
+
+        /// <summary>
+        /// Scatter small nature-kit props (grass tufts, flowers, mushrooms,
+        /// pebbles). No-op when the kit is absent; procedural world unchanged.
+        /// </summary>
+        void ScatterUndergrowth(string zone, int count, Vector2 x, Vector2 z, string[] models,
+                                System.Func<float, float, bool> exclude = null)
+        {
+            if (!NatureKit.Available || models == null || models.Length == 0) return;
+            for (int i = 0; i < count; i++)
+            {
+                float px = Random.Range(x.x, x.y);
+                float pz = Random.Range(z.x, z.y);
+                if (GroundHeight(px, pz) < 0.2f) continue; // skip water
+                if (exclude != null && exclude(px, pz)) continue; // keep clear of town
+                var go = new GameObject("Undergrowth_" + zone);
+                go.transform.position = new Vector3(px, GroundHeight(px, pz), pz);
+                var name = NatureKit.Pick(models);
+                NatureKit.Spawn(go.transform, name, Vector3.zero,
+                                NatureKit.TargetSize(name) * Random.Range(0.75f, 1.35f),
+                                Random.Range(0f, 360f));
+                spawned.Add(go);
             }
         }
 
@@ -966,6 +1094,9 @@ namespace PokeProfessions.World
 
             if (stationId == "campfire") BuildCampfire(go.transform);
             else if (stationId == "forge") BuildForge(go.transform);
+            else if (stationId == "weaponsmith") BuildWeaponsmith(go.transform);
+            else if (stationId == "armorer") BuildArmorer(go.transform);
+            else if (stationId == "gear_table") BuildGearTable(go.transform);
             else BuildWorkbench(go.transform);
 
             var col = go.AddComponent<BoxCollider>();
@@ -1084,6 +1215,90 @@ namespace PokeProfessions.World
             tool.transform.localScale = new Vector3(0.35f, 0.16f, 0.2f);
             tool.GetComponent<MeshRenderer>().material = ToonMat("#5A5C62");
             var tl = tool.GetComponent<Collider>(); if (tl != null) Destroy(tl);
+        }
+
+        /// <summary>
+        /// Weaponsmith's Bench: a rack with blades leaning on it and a grindstone.
+        /// The three blades are tinted steel / blue / gold — the Normal, Rare and
+        /// Legendary rungs, so the ladder is visible before you open the menu.
+        /// </summary>
+        void BuildWeaponsmith(Transform parent)
+        {
+            StationPart(parent, PrimitiveType.Cube, new Vector3(0, 0.09f, 0), new Vector3(1.7f, 0.18f, 1.1f), "#6E6A64");
+
+            foreach (float sx in new[] { -0.72f, 0.72f })
+                StationPart(parent, PrimitiveType.Cube, new Vector3(sx, 0.62f, 0), new Vector3(0.13f, 1.25f, 0.13f), "#8A5E33");
+
+            StationPart(parent, PrimitiveType.Cube, new Vector3(0, 1.2f, 0), new Vector3(1.72f, 0.12f, 0.12f), "#8A5E33");
+
+            // the racked blades, weakest rung to strongest left to right
+            string[] steel = { "#C8CDD4", "#56A8F5", "#F2A33C" };
+            for (int i = 0; i < steel.Length; i++)
+                StationPart(parent, PrimitiveType.Cube,
+                    new Vector3(-0.45f + i * 0.45f, 0.72f, 0),
+                    new Vector3(0.05f, 0.9f, 0.15f), steel[i], new Vector3(0f, 0f, 16f));
+
+            // grindstone: a small post with a wheel on it
+            StationPart(parent, PrimitiveType.Cube, new Vector3(0, 0.16f, 0.66f), new Vector3(0.1f, 0.32f, 0.1f), "#7A5230");
+            StationPart(parent, PrimitiveType.Cylinder, new Vector3(0, 0.4f, 0.66f), new Vector3(0.36f, 0.06f, 0.36f), "#7E8288", new Vector3(90f, 0f, 0f));
+        }
+
+        /// <summary>
+        /// Armourer's Stand: a form wearing the gear — a padded torso, pauldrons
+        /// and a helm, with a purple (Epic) breastplate leaning against the base.
+        /// </summary>
+        void BuildArmorer(Transform parent)
+        {
+            StationPart(parent, PrimitiveType.Cube, new Vector3(0, 0.09f, 0), new Vector3(1.6f, 0.18f, 1.1f), "#5E5A54");
+            StationPart(parent, PrimitiveType.Cube, new Vector3(0, 0.48f, 0), new Vector3(0.52f, 0.66f, 0.42f), "#B08968");
+            StationPart(parent, PrimitiveType.Cube, new Vector3(0, 0.8f, 0), new Vector3(0.2f, 0.22f, 0.2f), "#8A8478");
+
+            foreach (float sx in new[] { -0.44f, 0.44f })
+                StationPart(parent, PrimitiveType.Sphere, new Vector3(sx, 0.74f, 0), new Vector3(0.3f, 0.24f, 0.3f), "#A8B0B8");
+
+            StationPart(parent, PrimitiveType.Sphere, new Vector3(0, 1.16f, 0), new Vector3(0.34f, 0.36f, 0.34f), "#B8C0C8");
+            StationPart(parent, PrimitiveType.Cube, new Vector3(0, 0.86f, 0.24f), new Vector3(0.24f, 0.06f, 0.02f), "#4A4E54");
+
+            // the epic rung, set aside for the next customer
+            StationPart(parent, PrimitiveType.Cube, new Vector3(0.66f, 0.42f, 0.28f), new Vector3(0.7f, 0.62f, 0.1f), "#A08CE8", new Vector3(0f, 0f, -14f));
+        }
+
+        /// <summary>
+        /// Gearwright's Table: a sturdy bench carrying a weapon and a piece of
+        /// armour at once — the one place that works both ladders. Kept deliberately
+        /// busier than the specialist benches so it reads as "all your gear here".
+        /// </summary>
+        void BuildGearTable(Transform parent)
+        {
+            StationPart(parent, PrimitiveType.Cube, new Vector3(0, 0.09f, 0), new Vector3(1.9f, 0.18f, 1.2f), "#7A6A50");
+            StationPart(parent, PrimitiveType.Cube, new Vector3(0, 0.5f, 0), new Vector3(1.7f, 0.16f, 0.95f), "#9A7A50");
+
+            foreach (float sx in new[] { -0.76f, 0.76f })
+                foreach (float sz in new[] { -0.42f, 0.42f })
+                    StationPart(parent, PrimitiveType.Cube, new Vector3(sx, 0.28f, sz), new Vector3(0.12f, 0.56f, 0.12f), "#6E5636");
+
+            // a blade on the bench, and a helm on a corner post
+            StationPart(parent, PrimitiveType.Cube, new Vector3(-0.3f, 0.72f, 0.05f), new Vector3(0.08f, 0.5f, 0.14f), "#C8CDD4", new Vector3(0f, 0f, 78f));
+            StationPart(parent, PrimitiveType.Cube, new Vector3(-0.5f, 0.66f, 0.05f), new Vector3(0.18f, 0.1f, 0.12f), "#8A5E33");
+            StationPart(parent, PrimitiveType.Sphere, new Vector3(0.42f, 0.86f, 0f), new Vector3(0.34f, 0.36f, 0.34f), "#B8C0C8");
+            StationPart(parent, PrimitiveType.Cube, new Vector3(0.42f, 0.78f, 0.02f), new Vector3(0.26f, 0.06f, 0.16f), "#4A4E54");
+            StationPart(parent, PrimitiveType.Cube, new Vector3(0.42f, 0.62f, 0f), new Vector3(0.1f, 0.36f, 0.1f), "#8A5E33");
+
+            // the armour ladder's top rung, propped against the base
+            StationPart(parent, PrimitiveType.Cube, new Vector3(-0.66f, 0.42f, 0.42f), new Vector3(0.66f, 0.6f, 0.1f), "#F2A33C", new Vector3(0f, 0f, -16f));
+        }
+
+        /// <summary>One primitive of a station's silhouette (no collider, toon material).</summary>
+        void StationPart(Transform parent, PrimitiveType type, Vector3 pos, Vector3 scale, string hex, Vector3? euler = null)
+        {
+            var go = GameObject.CreatePrimitive(type);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = pos;
+            go.transform.localScale = scale;
+            if (euler.HasValue) go.transform.localRotation = Quaternion.Euler(euler.Value);
+            go.GetComponent<MeshRenderer>().material = ToonMat(hex);
+            var c = go.GetComponent<Collider>();
+            if (c != null) Destroy(c);
         }
 
         public GameObject SpawnShop(string shopId, string label, Vector3 xz)
@@ -1216,6 +1431,15 @@ namespace PokeProfessions.World
                 if (exclude != null && exclude(px, pz)) continue; // keep clear of town
                 var tree = new GameObject("Tree_" + zone);
                 tree.transform.position = new Vector3(px, GroundHeight(px, pz), pz);
+
+                // Quaternius nature-kit tree when the pack is present
+                if (TrySpawnKitTree(tree.transform, zone))
+                {
+                    var kcol = tree.AddComponent<CapsuleCollider>();
+                    kcol.radius = 0.5f; kcol.height = 3.5f; kcol.center = new Vector3(0, 1.75f, 0);
+                    spawned.Add(tree);
+                    continue;
+                }
 
                 // trunk: tapered two-tier — top tier must reach the crown (y=2.2)
                 var trunk = GameObject.CreatePrimitive(PrimitiveType.Cylinder);

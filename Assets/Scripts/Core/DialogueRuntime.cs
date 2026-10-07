@@ -175,6 +175,7 @@ namespace PokeProfessions.Core
                 case "mira": return state.HasFlag("met_mira") ? "mira_loop" : "mira_intro";
                 case "juna": return activeOrDone("q_professions") ? "juna_loop" : "juna_intro";
                 case "odessa": return state.HasFlag("ridge_opened") ? "odessa_loop" : "odessa_intro";
+                case "hask": return state.HasFlag("met_hask") ? "hask_loop" : "hask_intro";
                 case "tobin": return state.defeatedTrainers.Contains("trainer_tobin") ? "tobin_loop" : "tobin_fight";
                 case "sela": return state.HasFlag("has_sigil") ? "sela_loop" : "sela_intro";
                 case "korrin": return state.defeatedTrainers.Contains("trainer_korrin") ? "korrin_loop" : "korrin_fight";

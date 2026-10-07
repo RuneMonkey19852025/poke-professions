@@ -40,6 +40,21 @@ namespace PokeProfessions.Core
         public List<ItemStack> inventory = new List<ItemStack>();
         public string equippedItem = "";
 
+        // ---- player melee combat (overworld) ----
+        // The trainer themself can swing a weapon outside battles: Space or
+        // left-click near a wild creature. Levels much like a profession.
+        public string playerWeapon = "";         // equipped weapon item id ("" = bare hands)
+        public int playerWeaponLevel = 0;
+        public int playerWeaponXp = 0;
+
+        // Worn body armour ("" = none). One piece at a time; its "def+N" is flat
+        // damage taken off every wild hit and "hp+N" sets the health pool above
+        // the base — see PlayerCombat.MaxHP/Mitigation.
+        public string playerArmor = "";
+        // Trainer health. The ceiling is derived (base + armour), never stored,
+        // so equipping better armour can only ever raise it.
+        public int playerHP = PlayerCombat.BaseHP;
+
         // ---- Lucky Snorlax jackpot ----
         // Shared pot across both machines: every losing spin feeds it, a
         // triple-star jackpot pays the whole pot and resets it.
@@ -121,6 +136,14 @@ namespace PokeProfessions.Core
                 // rehydrate non-serialized state on every creature
                 foreach (var c in s.party) if (c != null) { c.NormalizeMoves(); c.RestorePPAfterLoad(); ValidateGear(c); }
                 foreach (var c in s.box) if (c != null) { c.NormalizeMoves(); c.RestorePPAfterLoad(); ValidateGear(c); }
+                if (!string.IsNullOrEmpty(s.playerWeapon) && ItemDB.Get(s.playerWeapon) == null) s.playerWeapon = "";
+                if (!string.IsNullOrEmpty(s.playerArmor) && ItemDB.Get(s.playerArmor) == null) s.playerArmor = "";
+                // saves written before the trainer had health (and any save made
+                // while knocked out) wake up whole; health can never exceed the
+                // ceiling its current armour allows.
+                int maxHP = PlayerCombat.MaxHP(s);
+                if (s.playerHP <= 0) s.playerHP = maxHP;
+                if (s.playerHP > maxHP) s.playerHP = maxHP;
                 return s;
             }
             catch (Exception) { return null; }
@@ -173,6 +196,8 @@ namespace PokeProfessions.Core
             // techniques are per-class resources: a full heal refills them all
             foreach (var t in WeaponMastery.Techniques)
                 WeaponMastery.RestoreTechPP(this, t.moveId);
+            // and a rest patches the trainer up too
+            playerHP = PlayerCombat.MaxHP(this);
         }
 
         static int CurrentMovePP(string moveId, Creature c)

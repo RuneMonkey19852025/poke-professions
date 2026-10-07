@@ -28,6 +28,30 @@ namespace PokeProfessions.Core
         Equipment
     }
 
+    /// <summary>
+    /// Gear quality ladder, Normal → Legendary. Drives the player weapon's
+    /// damage and the player armour's defense/HP, its UI colour, and which
+    /// crafting tier can make it. Ordered: the array index is the tier.
+    /// </summary>
+    public enum Rarity
+    {
+        Normal = 0,
+        Uncommon = 1,
+        Rare = 2,
+        Epic = 3,
+        Legendary = 4
+    }
+
+    /// <summary>Melee weapon classes the PLAYER swings in the overworld.</summary>
+    public enum PlayerWeaponKind
+    {
+        None = -1,
+        Club = 0,
+        Blade = 1,
+        Spear = 2,
+        Axe = 3
+    }
+
     [Serializable]
     public class ItemDef
     {
@@ -42,7 +66,9 @@ namespace PokeProfessions.Core
         public int healAmount;         // for consumables/food: creature HP restored
         public int conditionCure;      // 0 none, 1 cures status
         public int catchBonus;         // for CaptureCore items
-        public string equipBonus;      // e.g. "gather+1", "catch+1"
+        public string equipBonus;      // e.g. "gather+1", "catch+1", "def+6|hp+14"
+        public PlayerWeaponKind playerWeaponKind = PlayerWeaponKind.None; // for trainer melee weapons
+        public Rarity rarity = Rarity.Normal; // gear quality ladder (see Gear.cs)
     }
 
     [Serializable]

@@ -25,8 +25,29 @@ namespace PokeProfessions.UI
         Transform stage;
         GameObject enemyModel, playerModel;
         CreatureVisual enemyCv, playerCv;
+
+        // Where each side stands on the stage, in stage-local space, plus the
+        // creature the stage was built for — what RefreshStage compares against to
+        // notice that the active creature changed underneath the models.
+        Vector3 playerLocalPos, enemyLocalPos;
+        Quaternion playerLocalRot = Quaternion.identity, enemyLocalRot = Quaternion.identity;
+        Creature stagedPlayer, stagedEnemy;
+
+        /// <summary>The instantiated bodies the stage is showing, or null between battles.</summary>
+        public GameObject PlayerModel => playerModel;
+        public GameObject EnemyModel => enemyModel;
         readonly List<string> logLines = new List<string>();
         bool ended;
+
+        // ---- keyboard menu navigation (battle is fully playable without a mouse) ----
+        struct MenuEntry
+        {
+            public Button btn; public Image img; public Text label;
+            public Color bg, fg; public string text;
+        }
+        readonly List<MenuEntry> menuEntries = new List<MenuEntry>();
+        int menuIndex;
+        System.Action menuBack;   // submenu -> parent menu (Esc / Backspace)
 
         public static BattlePanel Build(Canvas canvas)
         {
@@ -162,6 +183,11 @@ namespace PokeProfessions.UI
                 enemyCv = vis;
                 vis.transform.localPosition = Vector3.zero;
                 enemyModel.transform.rotation = Quaternion.LookRotation(-fwd);
+
+                enemyLocalPos = enemyModel.transform.localPosition;
+                enemyLocalRot = enemyModel.transform.localRotation;
+                stagedEnemy = em;
+                PlaySendOut(enemyCv);
             }
 
             var pm = engine.PlayerMon;
@@ -179,13 +205,214 @@ namespace PokeProfessions.UI
                 playerCv = vis;
                 vis.transform.localPosition = Vector3.zero;
                 playerModel.transform.rotation = Quaternion.LookRotation(anchor - playerModel.transform.position);
+
+                playerLocalPos = playerModel.transform.localPosition;
+                playerLocalRot = playerModel.transform.localRotation;
+                stagedPlayer = pm;
+                PlaySendOut(playerCv);
             }
         }
 
+        /// <summary>
+        /// Put the active creature's body on the stage for whichever side has changed.
+        /// </summary>
+        /// <remarks>
+        /// A SWITCH sets the engine's active index outright, and a faint advances it to
+        /// the next creature that can fight (BattleEngine.HandleFaint), so the fight
+        /// has to be able to show someone other than the creature the stage was built
+        /// for. Without this the incoming creature attacks, flinches and faints as a
+        /// body it no longer is, and a trainer's next send-out never appears at all.
+        ///
+        /// Only the side that changed is rebuilt: the other keeps its pose, its facing
+        /// and its platform, so a swap reads as one creature leaving rather than the
+        /// whole arena popping.
+        /// </remarks>
+        public void RefreshStage()
+        {
+            if (stage == null || engine == null) return;   // no battle on stage
+
+            var pm = engine.PlayerMon;
+            var em = engine.EnemyMon;
+
+            if (!ReferenceEquals(pm, stagedPlayer))
+            {
+                RebuildSide(pm, true);
+                stagedPlayer = pm;
+            }
+            if (!ReferenceEquals(em, stagedEnemy))
+            {
+                RebuildSide(em, false);
+                stagedEnemy = em;
+            }
+        }
+
+        /// <summary>Replace one side's body in place, keeping its spot on the stage.</summary>
+        void RebuildSide(Creature c, bool isPlayer)
+        {
+            // Nothing to put there (that side is out of creatures) — keep the body
+            // already standing, so the last thing that happened stays on screen.
+            if (c == null || c.Species == null) return;
+
+            var old = isPlayer ? playerModel : enemyModel;
+            if (old != null) Destroy(old);
+
+            var go = new GameObject(isPlayer ? "playerModel" : "enemyModel");
+            go.transform.SetParent(stage, false);
+            go.transform.localPosition = isPlayer ? playerLocalPos : enemyLocalPos;
+            go.transform.localRotation = isPlayer ? playerLocalRot : enemyLocalRot;
+
+            var vis = CreatureVisual.Build(c.Species, c.shiny, go.transform);
+            if (vis != null) vis.transform.localPosition = Vector3.zero;
+
+            if (isPlayer) { playerModel = go; playerCv = vis; }
+            else { enemyModel = go; enemyCv = vis; }
+
+            // A replacement takes the field rather than blinking into existence.
+            PlaySendOut(vis);
+        }
+
+        /// <summary>
+        /// How long a battle beat holds before the creatures drop back to idle. The
+        /// packs' attack clips run about 1.0–1.6 s, so this sits just past the
+        /// shortest wind-up and still lets the long ones finish.
+        /// </summary>
+        public const float BeatSeconds = 1.2f;
+
+        /// <summary>
+        /// How long a follow-up act holds. The first act of a turn gets the full
+        /// window — a swing needs its wind-up on screen — but an answer can be read
+        /// faster, so an exchange is not simply twice as slow as a lone attack.
+        /// </summary>
+        public const float FollowUpSeconds = 0.8f;
+
+        /// <summary>
+        /// Release a beat's pose back to idle. The pose version captured up front
+        /// is what makes this safe: if the creature has moved on since (a new swing
+        /// started while this was waiting), the stale idle is dropped instead of
+        /// landing on top of the new swing and cutting it short.
+        /// </summary>
         System.Collections.IEnumerator ReturnToIdle(CreatureVisual cv)
         {
-            yield return new WaitForSeconds(1.2f);
-            if (cv != null) cv.PlayState("idle");
+            return ReturnToIdle(cv, BeatSeconds);
+        }
+
+        /// <summary>Release a pose back to idle after a given hold, same guard.</summary>
+        System.Collections.IEnumerator ReturnToIdle(CreatureVisual cv, float seconds)
+        {
+            if (cv == null) yield break;
+            int version = cv.PoseVersion;
+            yield return new WaitForSeconds(Mathf.Max(0.05f, seconds));
+            if (cv != null && cv.PoseVersion == version) cv.PlayState("idle");
+        }
+
+        /// <summary>
+        /// Bring a creature on with its pack's send-out pose, then let it settle.
+        /// </summary>
+        /// <remarks>
+        /// The KayKit characters have a real send-out (Spawn_Ground / the skeletons'
+        /// Skeletons_Spawn_Ground), and the creature packs arrive on their leap-into-idle
+        /// clip. The hold comes from the clip itself because these range from 1.3 s
+        /// to 3.6 s, and a fixed hold would cut the long ones off mid-landing.
+        ///
+        /// CreatureVisual.EnterField is what decides which of those a given creature
+        /// gets, and it answers with the seconds to hold either way — so the packs the
+        /// marketplace left with no arrival clip at all (the fish, the dragon, the
+        /// wasps) take the field on a code-driven leap instead of standing there and
+        /// blinking into existence.
+        /// </remarks>
+        void PlaySendOut(CreatureVisual cv)
+        {
+            if (cv == null) return;
+            float len = cv.EnterField();
+            if (len > 0.01f) StartCoroutine(ReturnToIdle(cv, len));
+        }
+
+        /// <summary>
+        /// One battle beat: the attacker swings, the target reacts, and both are
+        /// released back to idle when it is over.
+        /// </summary>
+        /// <remarks>
+        /// The swing is keyed off the move being used, not off whether it hurt
+        /// anything, because a miss, a KO and a mastery technique that deals no
+        /// damage at all (Aegis Guard is a pure buff) are all still swings. Keying
+        /// it — and the return to idle — off "did the target lose HP" is what used
+        /// to leave the attacker clamped mid-swing and the target frozen in its hit
+        /// pose for the rest of the fight, since nothing else ever asked for
+        /// another state. ReplayState, not PlayState, so a second swing is a second
+        /// swing rather than a no-op against the pose already showing.
+        ///
+        /// Public so the playtest can drive it with visuals of its own: the rule
+        /// that matters here — a beat always ends on idle, even with no reaction —
+        /// needs no battle to check.
+        /// </remarks>
+        public void StrikeBeat(CreatureVisual attacker, CreatureVisual target, string reaction)
+        {
+            if (attacker != null) attacker.ReplayState("attack");
+            if (target != null && !string.IsNullOrEmpty(reaction)) target.ReplayState(reaction);
+
+            if (attacker != null) StartCoroutine(ReturnToIdle(attacker));
+
+            // A fainted creature holds its death pose: standing it back up 1.2 s
+            // later would read as the KO being undone.
+            if (target != null && !string.IsNullOrEmpty(reaction) && reaction != "death")
+                StartCoroutine(ReturnToIdle(target));
+        }
+
+        /// <summary>
+        /// How a target answers a beat: a death pose when the blow finished it, a
+        /// flinch when it took damage, and nothing when it was untouched — a miss or
+        /// a mastery buff like Aegis Guard deals no damage, and a creature does not
+        /// flinch at a move that never reached it.
+        /// </summary>
+        public static string ReactionFor(int damage, bool fainted)
+        {
+            if (fainted) return "death";
+            return damage > 0 ? "hit" : null;
+        }
+
+        /// <summary>
+        /// Play out the turn the engine just resolved, then hand control back.
+        /// </summary>
+        /// <remarks>
+        /// The engine records a Beat per executed action (see BattleEngine.Beat), and
+        /// that is what makes a real exchange possible here: the player's swing and
+        /// the enemy's answer are two beats, in the order they actually happened —
+        /// the enemy's counterattack gets its own lunge and the player's creature
+        /// flinches at it, instead of the whole turn collapsing into one pose on the
+        /// player's side. Neither can be worked out from the HP bars afterwards,
+        /// because the engine decides who moves first by speed and priority.
+        ///
+        /// Input is already barred for the duration: the menus were cleared before
+        /// the turn, and Update ignores the keyboard while there are no entries.
+        /// </remarks>
+        System.Collections.IEnumerator PlayTurn()
+        {
+            var beats = engine != null ? engine.Beats : null;
+            for (int i = 0; beats != null && i < beats.Count; i++)
+            {
+                var b = beats[i];
+                var attacker = b.byPlayer ? playerCv : enemyCv;
+                var target = b.byPlayer ? enemyCv : playerCv;
+
+                StrikeBeat(attacker, target, ReactionFor(b.damage, b.targetFainted));
+
+                // the bars catch up as the blow lands rather than all at once at the
+                // end of the exchange
+                RefreshCards();
+                yield return new WaitForSeconds(i == 0 ? BeatSeconds : FollowUpSeconds);
+            }
+
+            // Only after the beats: a creature that fainted on this turn holds its
+            // death pose through the blow that dropped it, and its replacement walks
+            // on once the exchange is over rather than mid-swing.
+            RefreshStage();
+            AfterEnemyPhase();
+        }
+
+        /// <summary>Animate the resolved turn, then show the menus (or end it).</summary>
+        void ResolveTurn()
+        {
+            StartCoroutine(PlayTurn());
         }
 
         /// <summary>Flat battle platform under a creature (classic arena look).</summary>
@@ -211,6 +438,8 @@ namespace PokeProfessions.UI
 
         void ClearStage()
         {
+            stagedPlayer = null;
+            stagedEnemy = null;
             if (enemyModel != null) { Destroy(enemyModel); enemyModel = null; }
             if (playerModel != null) { Destroy(playerModel); playerModel = null; }
             enemyCv = null; playerCv = null;
@@ -268,11 +497,52 @@ namespace PokeProfessions.UI
                 if (child == endButton.gameObject) continue;
                 Destroy(child);
             }
+            menuEntries.Clear();
+            menuIndex = 0;
+            menuBack = null;
         }
 
         Button MenuButton(string label, Vector2 anchor, Vector2 size, System.Action onClick, int size15 = 15)
         {
-            return UIFactory.Button(menuBox, "btn_" + label, label, anchor, size, onClick, size15);
+            var btn = UIFactory.Button(menuBox, "btn_" + label, label, anchor, size, onClick, size15);
+            if (onClick != null)
+            {
+                var lbl = btn.GetComponentInChildren<Text>();
+                menuEntries.Add(new MenuEntry
+                {
+                    btn = btn,
+                    img = btn.GetComponent<Image>(),
+                    label = lbl,
+                    bg = btn.image.color,
+                    fg = lbl != null ? lbl.color : UiTheme.Text,
+                    text = label,
+                });
+            }
+            return btn;
+        }
+
+        /// <summary>Show which option the keyboard cursor is on (accent bg + ▶ marker).</summary>
+        void RefreshHighlight()
+        {
+            for (int i = 0; i < menuEntries.Count; i++)
+            {
+                var e = menuEntries[i];
+                bool on = i == menuIndex;
+                if (e.img != null) e.img.color = on ? UiTheme.Accent2 : e.bg;
+                if (e.label != null)
+                {
+                    e.label.color = on ? new Color(0.10f, 0.12f, 0.16f) : e.fg;
+                    e.label.text = on ? "▶ " + e.text : e.text;
+                }
+            }
+        }
+
+        /// <summary>Finish building a menu: put the cursor on the first option.</summary>
+        void MenuReady(System.Action back)
+        {
+            menuBack = back;
+            menuIndex = 0;
+            RefreshHighlight();
         }
 
         void ShowMenu()
@@ -283,6 +553,7 @@ namespace PokeProfessions.UI
             MenuButton("BAG", new Vector2(0.72f, 0.72f), new Vector2(150, 44), ShowBag);
             MenuButton("SWITCH", new Vector2(0.28f, 0.28f), new Vector2(150, 44), OnSwitch);
             MenuButton("RUN", new Vector2(0.72f, 0.28f), new Vector2(150, 44), OnRun);
+            MenuReady(null);
         }
 
         void ShowMoves()
@@ -332,6 +603,7 @@ namespace PokeProfessions.UI
                 OnLog("More techniques ready than fit on the wheel — master faster classes first.");
 
             MenuButton("BACK", new Vector2(0.5f, 0.05f), new Vector2(120, 30), ShowMenu, 13);
+            MenuReady(ShowMenu);
         }
 
         void ShowBag()
@@ -357,6 +629,7 @@ namespace PokeProfessions.UI
 
             if (slot == 0) OnLog("Your bag holds nothing usable.");
             MenuButton("BACK", new Vector2(0.5f, 0.05f), new Vector2(120, 30), ShowMenu, 13);
+            MenuReady(ShowMenu);
         }
 
         // ---------------- actions ----------------
@@ -365,14 +638,9 @@ namespace PokeProfessions.UI
         {
             if (ended) return;
             ClearMenu();
-            if (playerCv != null) playerCv.PlayState("attack");
+
             engine.PlayerTurn(moveId);
-            if (engine.EnemyMon != null && engine.EnemyMon.curHP > 0 && engine.EnemyMon.curHP < engine.EnemyMon.MaxHP)
-            {
-                if (enemyCv != null) enemyCv.PlayState("hit");
-                if (playerCv != null) StartCoroutine(ReturnToIdle(playerCv));
-            }
-            AfterEnemyPhase();
+            ResolveTurn();
         }
 
         void OnUseItem(string itemId)
@@ -394,7 +662,7 @@ namespace PokeProfessions.UI
                     return;
                 }
                 engine.EnemyOnlyTurn();
-                AfterEnemyPhase();
+                ResolveTurn();
                 return;
             }
 
@@ -421,7 +689,7 @@ namespace PokeProfessions.UI
             }
 
             engine.EnemyOnlyTurn();
-            AfterEnemyPhase();
+            ResolveTurn();
         }
 
         void OnSwitch()
@@ -445,6 +713,7 @@ namespace PokeProfessions.UI
             }
             if (slot == 0) OnLog("No one healthy to switch to!");
             MenuButton("BACK", new Vector2(0.5f, 0.05f), new Vector2(120, 30), ShowMenu, 13);
+            MenuReady(ShowMenu);
         }
 
         void DoSwitch(int idx)
@@ -452,8 +721,13 @@ namespace PokeProfessions.UI
             engine.ActivePlayerIdx = idx;
             var c = engine.PlayerMon;
             OnLog("Go, " + (c != null ? c.DisplayName : "?") + "!");
+
+            // The incoming creature is on the field now, before the enemy answers —
+            // a chosen switch is immediate, unlike a replacement after a faint.
+            RefreshStage();
+
             engine.EnemyOnlyTurn();
-            AfterEnemyPhase();
+            ResolveTurn();
         }
 
         void OnRun()
@@ -463,7 +737,7 @@ namespace PokeProfessions.UI
             bool ok = engine.TryFlee();
             if (ok) { SetEnded(); return; }
             engine.EnemyOnlyTurn();
-            AfterEnemyPhase();
+            ResolveTurn();
         }
 
         void AfterEnemyPhase()
@@ -532,7 +806,42 @@ namespace PokeProfessions.UI
         void Update()
         {
             if (cg == null || cg.alpha < 0.5f) return;
-            if (ended && Input.GetKeyDown(KeyCode.E)) Finish();
+            if (ended)
+            {
+                if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Return) ||
+                    Input.GetKeyDown(KeyCode.KeypadEnter)) Finish();
+                return;
+            }
+            if (menuEntries.Count == 0) return;
+
+            // ---- move cursor (2-column grid: up/down jump a row) ----
+            int idx = menuIndex;
+            if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) idx -= 2;
+            if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) idx += 2;
+            if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) idx -= 1;
+            if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)) idx += 1;
+            idx = Mathf.Clamp(idx, 0, menuEntries.Count - 1);
+            if (idx != menuIndex)
+            {
+                menuIndex = idx;
+                RefreshHighlight();
+                if (Sfx.I != null) Sfx.I.Play("ui");
+            }
+
+            // ---- confirm ----
+            if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Return) ||
+                Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
+            {
+                var entry = menuEntries[menuIndex];
+                if (entry.btn != null && entry.btn.interactable)
+                    entry.btn.onClick.Invoke();
+            }
+            // ---- back out of a submenu ----
+            else if ((Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Backspace)) && menuBack != null)
+            {
+                if (Sfx.I != null) Sfx.I.Play("ui");
+                menuBack();
+            }
         }
 
         public void Show(bool on)

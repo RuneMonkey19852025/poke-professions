@@ -99,12 +99,28 @@ namespace PokeProfessions.Core
             }
         }
 
+        /// <summary>
+        /// Whether a recipe bound to <paramref name="recipeStation"/> can be made at
+        /// <paramref name="currentStation"/>. The specialist benches each own one
+        /// ladder; the Gearwright's Table is the generalist — the single bench that
+        /// will work both the weapon and the armour ladder, so a trainer who just
+        /// wants gear does not have to learn which bench is which.
+        /// </summary>
+        public static bool StationAccepts(string recipeStation, string currentStation)
+        {
+            if (string.IsNullOrEmpty(recipeStation)) return true;   // craftable anywhere
+            if (recipeStation == currentStation) return true;
+            if (currentStation == "gear_table")
+                return recipeStation == "weaponsmith" || recipeStation == "armorer";
+            return false;
+        }
+
         /// <summary>Can the player craft this recipe right now (level + inputs + station)?</summary>
         public static bool CanCraft(GameState save, Recipe r, string currentStation)
         {
             if (r == null || save == null) return false;
             if (save.ProfLevel(r.profession) < r.requiredLevel) return false;
-            if (!string.IsNullOrEmpty(r.station) && currentStation != r.station) return false;
+            if (!StationAccepts(r.station, currentStation)) return false;
             foreach (var input in r.inputs)
                 if (save.CountItem(input.itemId) < input.count) return false;
             return true;
@@ -114,7 +130,7 @@ namespace PokeProfessions.Core
         {
             if (save.ProfLevel(r.profession) < r.requiredLevel)
                 return Name(r.profession) + " Lv" + r.requiredLevel + " required";
-            if (!string.IsNullOrEmpty(r.station) && currentStation != r.station)
+            if (!StationAccepts(r.station, currentStation))
                 return "Requires " + StationName(r.station);
             foreach (var input in r.inputs)
                 if (save.CountItem(input.itemId) < input.count)
@@ -129,6 +145,9 @@ namespace PokeProfessions.Core
                 case "forge": return "a Forge";
                 case "campfire": return "a Campfire";
                 case "workbench": return "a Workbench";
+                case "weaponsmith": return "a Weaponsmith's Bench";
+                case "armorer": return "an Armourer's Stand";
+                case "gear_table": return "a Gearwright's Table";
             }
             return "anywhere";
         }

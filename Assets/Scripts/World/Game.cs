@@ -74,7 +74,9 @@ namespace PokeProfessions.World
             var playerModel = ModelLoader.Instantiate("KayKitAdventurers/Characters/fbx/Ranger", pf.transform, 1f);
             if (playerModel != null)
             {
-                playerModel.transform.localPosition = Vector3.zero;
+                // (ground-aligned by ModelLoader.Instantiate)
+                // idle/walk/run from the shared KayKit clip library
+                pf.AddComponent<PlayerLocomotion>();
                 WorldBuilder.AddBlobShadow(pf.transform, 0.5f);
                 SpawnCamera(pf);
                 player = pf.GetComponent<PlayerController>();

@@ -12,11 +12,15 @@ namespace PokeProfessions.UI
     {
         CanvasGroup cg;
         Text header, detail;
-        RectTransform list;
+        RectTransform list;      // the visible frame
+        RectTransform content;   // the scrollable row column inside it
+        ScrollRect scroll;
         readonly List<Button> rowButtons = new List<Button>();
         readonly List<Recipe> shown = new List<Recipe>();
         Recipe selected;
         string station = "";
+
+        const float RowHeight = 34f, RowGap = 38f;
 
         public static CraftingPanel Build(Canvas canvas)
         {
@@ -44,8 +48,25 @@ namespace PokeProfessions.UI
             UIFactory.Button(window, "close", "X  [Esc]", new Vector2(1, 1), new Vector2(96, 30),
                 () => { Show(false); if (UiRouter.I != null) UiRouter.I.ClosePanel(gameObject); }, 13, UiTheme.Panel);
 
+            // A station's list can run past the window — the Weaponsmith alone
+            // carries four kinds across five tiers — so the rows live in a
+            // scroll view rather than being dropped off the bottom unreachable.
             list = UIFactory.Box(window, "list", new Color(0, 0, 0, 0.15f),
                 new Vector2(0, 0), new Vector2(0.45f, 1), new Vector2(10, 10), new Vector2(-6, -40));
+            list.gameObject.AddComponent<RectMask2D>();
+
+            content = UIFactory.Box(list, "content", new Color(0, 0, 0, 0),
+                new Vector2(0, 1), new Vector2(1, 1), Vector2.zero, Vector2.zero);
+            content.pivot = new Vector2(0.5f, 1f);
+            content.sizeDelta = new Vector2(0, 0);
+
+            scroll = list.gameObject.AddComponent<ScrollRect>();
+            scroll.content = content;
+            scroll.viewport = list;
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 28f;
 
             detail = UIFactory.TextAt(window, "detail", "", 14,
                 new Vector2(0.45f, 0), new Vector2(1, 1), new Vector2(10, 46), new Vector2(-12, -40),
@@ -69,6 +90,9 @@ namespace PokeProfessions.UI
             if (s == "forge") return "Forge";
             if (s == "campfire") return "Campfire";
             if (s == "workbench") return "Workbench";
+            if (s == "weaponsmith") return "Weaponsmith's Bench";
+            if (s == "armorer") return "Armourer's Stand";
+            if (s == "gear_table") return "Gearwright's Table";
             return "Field Crafting";
         }
 
@@ -79,7 +103,7 @@ namespace PokeProfessions.UI
 
             foreach (var r in ItemDB.Recipes)
             {
-                bool stationOk = string.IsNullOrEmpty(r.station) || r.station == station;
+                bool stationOk = ProfessionSystem.StationAccepts(r.station, station);
                 if (stationOk) shown.Add(r);
             }
 
@@ -90,20 +114,33 @@ namespace PokeProfessions.UI
             {
                 var r = shown[i];
                 var def = ItemDB.Get(r.resultItemId);
-                string label = (def != null ? def.name : r.resultItemId) + "  [" + ProfessionSystem.Name(r.profession) + " Lv" + r.requiredLevel + "]";
+                string label = (def != null ? def.name : r.resultItemId) +
+                               (def != null && def.rarity != Rarity.Normal ? "  [" + ItemRarity.Name(def.rarity) + "]" : "") +
+                               "  " + ProfessionSystem.Name(r.profession) + " Lv" + r.requiredLevel;
 
-                var btn = UIFactory.Button(list, "r" + i, label,
-                    new Vector2(0, 1), new Vector2(240, 34),
+                var btn = UIFactory.Button(content, "r" + i, label,
+                    new Vector2(0, 1), new Vector2(240, RowHeight),
                     () => Select(r), 13);
-                btn.transform.SetParent(list, false);
+                btn.transform.SetParent(content, false);
                 var rt = btn.GetComponent<RectTransform>();
                 rt.anchorMin = new Vector2(0, 1);
                 rt.anchorMax = new Vector2(1, 1);
                 rt.pivot = new Vector2(0.5f, 1f);
-                rt.anchoredPosition = new Vector2(0, -6 - i * 38f);
-                rt.sizeDelta = new Vector2(0, 34);
+                rt.anchoredPosition = new Vector2(0, -6 - i * RowGap);
+                rt.sizeDelta = new Vector2(0, RowHeight);
+
+                // tier colour, so the ladder is legible while scanning the list
+                var lbl = btn.GetComponentInChildren<Text>();
+                if (lbl != null)
+                {
+                    lbl.color = def != null ? UiTheme.Hex(ItemRarity.ColorHex(def.rarity)) : UiTheme.Text;
+                    lbl.alignment = TextAnchor.MiddleLeft;
+                }
                 rowButtons.Add(btn);
             }
+
+            content.sizeDelta = new Vector2(0, 12f + shown.Count * RowGap);
+            if (scroll != null) scroll.verticalNormalizedPosition = 1f; // start at the top
 
             detail.text = selected != null ? DetailText(s, selected) : "Select a recipe.";
         }
@@ -118,8 +155,10 @@ namespace PokeProfessions.UI
         {
             var def = ItemDB.Get(r.resultItemId);
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("<b>" + (def != null ? def.name : r.resultItemId) + " x" + r.resultCount + "</b>");
+            sb.AppendLine("<b>" + (def != null ? ItemRarity.RichName(def.id) : r.resultItemId) + " x" + r.resultCount + "</b>");
             if (def != null) sb.AppendLine(def.desc);
+            if (def != null && def.rarity != Rarity.Normal)
+                sb.AppendLine("<color=" + ItemRarity.ColorHex(def.rarity) + ">" + ItemRarity.Name(def.rarity) + " quality</color>");
             sb.AppendLine();
             sb.AppendLine("Profession: " + ProfessionSystem.Name(r.profession) + "  (you: Lv" + s.ProfLevel(r.profession) + ", needs Lv" + r.requiredLevel + ")");
             sb.AppendLine("Station: " + (string.IsNullOrEmpty(r.station) ? "anywhere" : StationTitle(r.station)));

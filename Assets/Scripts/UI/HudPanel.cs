@@ -12,6 +12,8 @@ namespace PokeProfessions.UI
     {
         CanvasGroup cg;
         Text coinsText, zoneText, promptText;
+        Text playerHpText;
+        RectTransform playerHpBg, playerHpFill;
         RectTransform toasts;
         readonly List<Text> toastLines = new List<Text>();
         readonly List<float> toastTimes = new List<float>();
@@ -56,7 +58,7 @@ namespace PokeProfessions.UI
         {
             var box = UIFactory.BoxRounded(transform, "TopLeft", new Color(0.96f, 0.95f, 0.90f),
                 new Color(0.16f, 0.20f, 0.35f), 4f,
-                new Vector2(0, 1), new Vector2(0, 1), new Vector2(14, -14), new Vector2(320, -110));
+                new Vector2(0, 1), new Vector2(0, 1), new Vector2(14, -14), new Vector2(340, -132));
 
             coinsText = UIFactory.TextAt(box, "coins", "0 coins", 17,
                 new Vector2(0, 1), new Vector2(1, 1), new Vector2(12, -32), new Vector2(-10, -10),
@@ -64,6 +66,16 @@ namespace PokeProfessions.UI
             zoneText = UIFactory.TextAt(box, "zone", "Meadowfall", 15,
                 new Vector2(0, 1), new Vector2(1, 1), new Vector2(12, -58), new Vector2(-10, -36),
                 TextAnchor.MiddleLeft, new Color(0.35f, 0.42f, 0.55f));
+
+            // The trainer's own health, above the party bars — the stat armour buys.
+            playerHpText = UIFactory.TextAt(box, "php", "", 14,
+                new Vector2(0, 1), new Vector2(1, 1), new Vector2(12, -84), new Vector2(-10, -62),
+                TextAnchor.MiddleLeft, new Color(0.12f, 0.13f, 0.18f));
+
+            UIFactory.FillBar(box, "phpbar", new Color(0, 0, 0, 0.35f), UiTheme.Hp,
+                out playerHpBg, out playerHpFill);
+            playerHpBg.anchorMin = new Vector2(0, 1); playerHpBg.anchorMax = new Vector2(1, 1);
+            playerHpBg.offsetMin = new Vector2(12, -104); playerHpBg.offsetMax = new Vector2(-10, -92);
         }
 
         void BuildParty()
@@ -114,7 +126,7 @@ namespace PokeProfessions.UI
         void BuildControls()
         {
             var t = UIFactory.TextAt(transform, "controls",
-                "WASD move · E interact · I bag · G gear · J journal · C creatures · F5 save · Esc close",
+                "WASD move · E interact · Space/click attack · I bag · G gear · Q weapons & armour · J journal · C creatures · F5 save · Esc close",
                 13,
                 new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-420, 8), new Vector2(420, 26),
                 TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.55f));
@@ -129,6 +141,15 @@ namespace PokeProfessions.UI
 
             coinsText.text = s.coins + " coins";
             zoneText.text = ZoneLabel(s.curZone);
+
+            int youMaxHP = PlayerCombat.MaxHP(s);
+            float youHpFrac = youMaxHP > 0 ? Mathf.Clamp01((float)s.playerHP / youMaxHP) : 0f;
+            int soak = PlayerCombat.Mitigation(s);
+            playerHpText.text = "You  " + Mathf.Max(0, s.playerHP) + "/" + youMaxHP + " HP" +
+                                (soak > 0 ? "   (armour −" + soak + ")" : "");
+            UIFactory.SetFill(playerHpBg, playerHpFill, youHpFrac);
+            var pfill = playerHpFill.GetComponent<Image>();
+            if (pfill != null) pfill.color = youHpFrac < 0.3f ? UiTheme.HpLow : UiTheme.Hp;
 
             // party bars
             for (int i = 0; i < 6; i++)
@@ -164,6 +185,13 @@ namespace PokeProfessions.UI
             var pc = FindObjectOfType<PlayerController>();
             if (pc != null && pc.NearestInteractable != null)
                 text = "[E] " + pc.NearestInteractable.Prompt();
+            else if (pc != null && pc.AimedTarget != null && pc.AimedTarget.wild != null)
+            {
+                var w = pc.AimedTarget.wild;
+                text = "[Space] Strike " + w.DisplayName + "  Lv" + w.level + "  (" +
+                       Mathf.Max(0, w.curHP) + "/" + w.MaxHP + " HP)" +
+                       (pc.AimedTarget.IsAggro ? "   <color=#EB5757>fighting back!</color>" : "");
+            }
 
             if (promptText.text != text) promptText.text = text;
         }

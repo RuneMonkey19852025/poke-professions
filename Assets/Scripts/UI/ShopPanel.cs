@@ -80,13 +80,17 @@ namespace PokeProfessions.UI
             var s = Game.I.State;
             coins.text = s.coins + " coins";
 
+            ShopDef shopDef;
+            StoryData.Shops.TryGetValue(shopId, out shopDef);
+
             int row = 0;
             if (buying)
             {
-                ShopDef def;
-                if (StoryData.Shops.TryGetValue(shopId, out def) && def != null && def.stock != null)
+                if (shopDef != null)
                 {
-                    foreach (var entry in def.stock)
+                    // Authored list, or the armoury's story-gated one — the panel
+                    // does not need to know which (see StoryData.StockFor).
+                    foreach (var entry in StoryData.StockFor(shopDef, s))
                     {
                         var parts = entry.Split(':');
                         string itemId = parts[0];
@@ -114,9 +118,29 @@ namespace PokeProfessions.UI
             }
 
             if (row == 0) AddRow("(nothing here)", null);
-            detail.text = buying
-                ? "Click an item to buy.\nSelling pays half price.\nProfession gear and rare materials sell too."
-                : "Click an item to sell one unit.\nKey items can't be sold.";
+            detail.text = DetailText(s, shopDef);
+        }
+
+        /// <summary>
+        /// The blurb under the list. Buying also carries the shop's locked-tier
+        /// hints, when it has any: a rack that quietly stops at Uncommon reads as a
+        /// short ladder, so the armoury says what it will carry later and what opens
+        /// each rung (StoryData.StockHints).
+        /// </summary>
+        string DetailText(GameState s, ShopDef def)
+        {
+            if (!buying) return "Click an item to sell one unit.\nKey items can't be sold.";
+
+            var sb = new System.Text.StringBuilder();
+            sb.Append("Click an item to buy.\nSelling pays half price.\nProfession gear and rare materials sell too.");
+
+            var hints = StoryData.StockHints(def, s);
+            if (hints != null && hints.Count > 0)
+            {
+                sb.Append("\n\n<color=#9FB0C0>More gear arrives as you go:</color>");
+                foreach (var h in hints) sb.Append("\n<color=#C8CDD4>· " + h + "</color>");
+            }
+            return sb.ToString();
         }
 
         void AddRow(string label, System.Action onClick)

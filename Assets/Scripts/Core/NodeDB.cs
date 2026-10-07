@@ -49,6 +49,15 @@ namespace PokeProfessions.Core
               new[] { "iron_ore", "iron_ore", "stone", "sigil_piece_c" }, "ridge");
             N("rock_moon", "Hollow Monolith", ProfessionId.Miner, 6, 20,
               new[] { "moonshard", "stone", "iron_ore" }, "hollow_deep");
+
+            // Lv2 outcrops ringing Emberpost: the start area's own ore, so a
+            // new Miner can work the meadow instead of walking out to the
+            // ridge. No sigil fragments here — the Ember fragment stays a
+            // frontier (ridge vein) drop so the quest still sends you there.
+            N("rock_iron_shallow", "Iron Outcrop", ProfessionId.Miner, 2, 10,
+              new[] { "iron_ore", "iron_ore", "stone" }, "meadow");
+            N("rock_copper_shallow", "Copper Outcrop", ProfessionId.Miner, 2, 10,
+              new[] { "copper_ore", "copper_ore", "stone" }, "meadow");
             N("spot_river", "River Shoal", ProfessionId.Fisher, 1, 9,
               new[] { "raw_fish", "raw_fish", "raw_fish", "gildfish" }, "meadow");
             N("spot_lake", "Mirrorlake Pier", ProfessionId.Fisher, 3, 10,

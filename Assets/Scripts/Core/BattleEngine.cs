@@ -48,6 +48,31 @@ namespace PokeProfessions.Core
         public event Action<Creature> Evolved;
         public event Action<string> CaughtSpecies;
 
+        /// <summary>
+        /// One action the turn actually took, in the order it happened, so the
+        /// battle UI can show the turn instead of inferring it.
+        /// </summary>
+        /// <remarks>
+        /// PlayerTurn resolves both sides inside a single call, and the side that
+        /// goes first is decided by speed and move priority — so the panel cannot
+        /// reconstruct the exchange from the HP bars afterwards, and it cannot tell
+        /// "the enemy swung and missed" from "the enemy never moved". Each executed
+        /// action appends one beat and the panel plays them back in sequence.
+        /// </remarks>
+        public struct Beat
+        {
+            /// <summary>The player's creature was the one acting.</summary>
+            public bool byPlayer;
+            public string moveId;
+            /// <summary>Damage the target took; 0 on a miss or a move that deals none.</summary>
+            public int damage;
+            /// <summary>The target dropped to 0 HP on this blow.</summary>
+            public bool targetFainted;
+        }
+
+        /// <summary>The beats of the turn just resolved, in order (see Beat).</summary>
+        public readonly List<Beat> Beats = new List<Beat>();
+
         readonly Dictionary<string, int> atkBuffs = new Dictionary<string, int>();
         readonly Dictionary<string, int> defBuffs = new Dictionary<string, int>();
         bool catchSucceeded;
@@ -119,6 +144,7 @@ namespace PokeProfessions.Core
         public void PlayerTurn(string moveId)
         {
             if (Result != BattleResult.Ongoing) return;
+            Beats.Clear();
             var pm = PlayerMon;
             var em = EnemyMon;
             if (pm == null || em == null) return;
@@ -159,6 +185,7 @@ namespace PokeProfessions.Core
         public void EnemyOnlyTurn()
         {
             if (Result != BattleResult.Ongoing) return;
+            Beats.Clear();
             var em = EnemyMon;
             var pm = PlayerMon;
             if (em == null || pm == null) return;
@@ -240,12 +267,17 @@ namespace PokeProfessions.Core
             if (mv.accuracy > 0 && UnityEngine.Random.Range(0, 100) >= mv.accuracy)
             {
                 Emit("It missed!");
+                // A whiff is still a swing: record it so the battle UI shows the
+                // creature wind up instead of standing still through its turn.
+                Beats.Add(new Beat { byPlayer = atkIsPlayer, moveId = mv.id });
                 return;
             }
 
+            int beatDamage = 0;
             if (mv.power > 0)
             {
                 int dmg = CalcDamage(atk, def, mv);
+                beatDamage = dmg;
                 def.curHP = Mathf.Max(0, def.curHP - dmg);
                 Emit(def.DisplayName + " took " + dmg + " damage.");
                 Sfx("hit");
@@ -260,7 +292,16 @@ namespace PokeProfessions.Core
 
             ApplyEffect(atk, def, mv);
 
-            if (def.curHP <= 0)
+            bool fainted = def.curHP <= 0;
+            Beats.Add(new Beat
+            {
+                byPlayer = atkIsPlayer,
+                moveId = mv.id,
+                damage = beatDamage,
+                targetFainted = fainted,
+            });
+
+            if (fainted)
             {
                 Emit(def.DisplayName + " fainted!");
                 Sfx("faint");

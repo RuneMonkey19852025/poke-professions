@@ -35,3 +35,13 @@ libdecor-*.so*
 *_Data/
 launch.sh
 run-game.sh
+
+# transient auto-play request written by launch.sh (consumed by Assets/Editor/AutoPlay.cs)
+Assets/AutoPlay.request*
+
+# one-shot playtest markers (consumed by Assets/Editor/EditorPlaytest.cs)
+Assets/Playtest.request*
+Assets/Playtest.exit*
+
+# Unity's unsaved-scene recovery snapshots
+Assets/_Recovery/

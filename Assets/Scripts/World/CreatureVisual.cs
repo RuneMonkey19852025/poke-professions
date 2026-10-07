@@ -19,14 +19,209 @@ namespace PokeProfessions.World
         GameObject packModel;
         string packPath;
         Animation packAnim;
+        string packState;      // the state packAnim is playing, so re-asking is free
+        Coroutine arrivalCo;   // the running synthetic arrival, if any
+        Vector3 arrivalHome;   // where the body belongs on the stage
+        Vector3 arrivalHomeScale;
 
-        /// <summary>Play a gameplay animation (idle/walk/attack/hit/death) if the model has one.</summary>
+        /// <summary>
+        /// Bumped on every pose change. A caller that schedules a later "back to
+        /// idle" (BattlePanel.ReturnToIdle) captures this first and skips its write
+        /// if the pose has moved on — otherwise a stale idle lands on top of a
+        /// swing that started while it was waiting and cuts the swing short.
+        /// </summary>
+        public int PoseVersion { get; private set; }
+
+        /// <summary>
+        /// Set the pose (idle/walk/run/attack/hit/death) if the model has one.
+        /// Idempotent: asking for the state that is already playing is a no-op,
+        /// because the overworld wilds call this every frame as they walk, and
+        /// Animation.Play restarts a clip from zero — without the guard, a roaming
+        /// creature would be frozen on frame one of its walk cycle.
+        /// Use ReplayState instead for a pose that repeats as an event.
+        /// Loop states repeat; the event states (attack/hit/death) play once and
+        /// hold their last frame until something asks for another state.
+        /// </summary>
         public void PlayState(string state)
         {
             if (packAnim == null || packPath == null) return;
-            var clip = ModelLoader.GetClip(packPath, state);
-            if (clip == null) return;
-            packAnim.Play(state); // state name is the clip's registered name
+            if (state == packState && packAnim.IsPlaying(state)) return;
+            if (!Configure(state)) return;
+            packAnim.Play(state);
+        }
+
+        /// <summary>
+        /// Play a pose as an event: always restart it from the wind-up, even when
+        /// the same state is already playing.
+        /// </summary>
+        /// <remarks>
+        /// The battle asks for "attack" once per swinging creature, and that ask is
+        /// a new swing each time — a second one that fell through the idempotence
+        /// guard above would leave the clip clamped on its last frame, so the
+        /// creature would appear to wind up once and then hold still for the rest of
+        /// the fight. That is the difference between the two entry points: PlayState
+        /// is the per-frame roam ask, ReplayState is a discrete beat.
+        /// </remarks>
+        public void ReplayState(string state)
+        {
+            if (packAnim == null || packPath == null) return;
+            if (!Configure(state)) return;
+
+            // Rewinding is what makes it play again: Play(name) on a state that is
+            // already playing (or clamped on its last frame) leaves the time alone.
+            var st = packAnim[state];
+            if (st != null) st.time = 0f;
+            packAnim.Play(state);
+        }
+
+        /// <summary>
+        /// Resolve a state's clip and configure how it plays. False when the pack
+        /// has no such clip, in which case the current pose is left alone.
+        /// </summary>
+        bool Configure(string state)
+        {
+            if (string.IsNullOrEmpty(state)) return false;
+            if (ModelLoader.GetClip(packPath, state) == null) return false;
+
+            var st = packAnim[state];
+            if (st == null) return false;
+
+            st.wrapMode = Loops(state) ? WrapMode.Loop : WrapMode.ClampForever;
+            st.speed = 1f;
+            packState = state;
+            PoseVersion++;
+            return true;
+        }
+
+        /// <summary>
+        /// Length in seconds of a state's clip, or 0 when the pack has none. A caller
+        /// that has to come back from a one-shot pose needs the real length rather than
+        /// a guess: the send-out clips run from 1.3 s (KayKit Spawn_Ground) to 3.6 s
+        /// (Skeletons_Spawn_Ground), and cutting one short leaves the creature frozen
+        /// mid-landing.
+        /// </summary>
+        public float ClipLength(string state)
+        {
+            if (packAnim == null || packPath == null || string.IsNullOrEmpty(state)) return 0f;
+            var st = packAnim[state];
+            return st != null && st.clip != null ? st.clip.length : 0f;
+        }
+
+        /// <summary>
+        /// Length of the code-driven arrival that stands in when a pack has no
+        /// send-out clip. Sized to read as a single leap: long enough to see the
+        /// body come up out of the ground and settle, short enough not to stall
+        /// the start of the battle.
+        /// </summary>
+        public const float SyntheticArrivalSeconds = 0.72f;
+
+        /// <summary>
+        /// Bring the creature onto the field and return how long a caller should
+        /// hold before asking for idle. A pack with a real send-out clip plays it
+        /// (KayKit Spawn_Ground / Skeletons_Spawn_Ground, the creature packs'
+        /// leap-to-idle clips); a pack without one gets the code-driven arrival.
+        /// </summary>
+        /// <remarks>
+        /// The product ask is that every creature *enters* rather than simply
+        /// appearing. Most packs have an arrival clip, but the fish, the dragon and
+        /// the wasps ship none, and those thirteen species used to stand there while
+        /// everything else made an entrance. The clip path and the synthetic path
+        /// return the same contract — seconds to hold — so the caller does not have
+        /// to know which kind of creature it is holding for.
+        /// </remarks>
+        public float EnterField()
+        {
+            float len = ClipLength("spawn");
+            if (len > 0.01f)
+            {
+                ReplayState("spawn");
+                return len;
+            }
+            BeginArrival();
+            return SyntheticArrivalSeconds;
+        }
+
+        /// <summary>
+        /// A code-driven arrival for bodies whose pack has no send-out clip: the
+        /// creature rises out of the ground along a stretched arc, lands where it
+        /// belongs and squashes flat before recovering. Motions the root transform,
+        /// not the rig, so it layers over the idle pose already playing and works
+        /// for the procedural fallback bodies too, which have no clips at all.
+        /// </summary>
+        void BeginArrival()
+        {
+            if (arrivalCo != null)
+            {
+                // A second arrival on the same body (a re-send) restarts from home
+                // rather than from wherever the first one got to mid-leap.
+                StopCoroutine(arrivalCo);
+                ResetArrival();
+            }
+            else
+            {
+                arrivalHome = transform.localPosition;
+                arrivalHomeScale = transform.localScale;
+            }
+            arrivalCo = StartCoroutine(SyntheticArrival());
+        }
+
+        void ResetArrival()
+        {
+            transform.localPosition = arrivalHome;
+            transform.localScale = arrivalHomeScale;
+        }
+
+        System.Collections.IEnumerator SyntheticArrival()
+        {
+            // Scale the leap to the creature: a fish and a dragon should not drop in
+            // from the same height. Species.scale is the size the body was built at.
+            float height = Mathf.Max(0.6f, Species != null ? Species.scale : 1f);
+            float drop = height * 0.75f;   // starts this far below its spot
+            float hop = height * 0.30f;    // overshoots the ground at the arc's apex
+            const float landAt = 0.72f;    // fraction of the arrival spent in the air
+
+            float t = 0f;
+            while (t < SyntheticArrivalSeconds)
+            {
+                t += Time.deltaTime;
+                float k = Mathf.Clamp01(t / SyntheticArrivalSeconds);
+                float y;
+                float sy = 1f, sxz = 1f;
+
+                if (k < landAt)
+                {
+                    float u = k / landAt;
+                    float ease = 1f - (1f - u) * (1f - u);   // ease out of the rise
+                    y = Mathf.Lerp(-drop, 0f, ease) + Mathf.Sin(u * Mathf.PI) * hop;
+                    // stretch along the arc, the way a leaping body reads
+                    sy = 1f + 0.14f * Mathf.Sin(u * Mathf.PI);
+                    sxz = 1f - 0.09f * Mathf.Sin(u * Mathf.PI);
+                }
+                else
+                {
+                    float u = (k - landAt) / (1f - landAt);
+                    y = 0f;
+                    // impact squash that eases out over the tail of the arrival
+                    float s = Mathf.Cos(u * Mathf.PI * 0.5f);
+                    sy = 1f - 0.24f * s;
+                    sxz = 1f + 0.18f * s;
+                }
+
+                transform.localPosition = arrivalHome + new Vector3(0f, y, 0f);
+                transform.localScale = new Vector3(arrivalHomeScale.x * sxz,
+                                                   arrivalHomeScale.y * sy,
+                                                   arrivalHomeScale.z * sxz);
+                yield return null;
+            }
+
+            ResetArrival();
+            arrivalCo = null;
+        }
+
+        /// <summary>Which states are cycles rather than one-shot events.</summary>
+        static bool Loops(string state)
+        {
+            return state == "idle" || state == "walk" || state == "run" || state == "swim";
         }
 
         public static CreatureVisual Build(SpeciesDef sp, bool shiny, Transform parent)
@@ -55,7 +250,8 @@ namespace PokeProfessions.World
                 packModel = ModelLoader.Instantiate(packPath, transform, ms, auraHex);
                 if (packModel != null)
                 {
-                    packModel.transform.localPosition = new Vector3(0f, 0f, 0f);
+                    // (ModelLoader.Instantiate already ground-aligned the model;
+                    // do not reset localPosition or the lift is undone)
                     EnsureAnimator(packModel);
                     packAnim = packModel.GetComponentInChildren<Animation>();
                     WorldBuilder.AddBlobShadow(transform, 0.55f * Species.scale);
