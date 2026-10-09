@@ -42,8 +42,21 @@ namespace PokeProfessions.Core
 
         // ---- player melee combat (overworld) ----
         // The trainer themself can swing a weapon outside battles: Space or
-        // left-click near a wild creature. Levels much like a profession.
+        // left-click near a wild creature.
         public string playerWeapon = "";         // equipped weapon item id ("" = bare hands)
+
+        // ---- trainer skills (PlayerMastery) ----
+        // Levels the way creature mastery does: landed hits and KOs grow the
+        // swung weapon's KIND (club/blade/spear/axe are separate skills), and
+        // KOs landed while wearing armour grow the armour skill. +0.6% damage
+        // per weapon level, −0.5% damage taken per armour level, Lv100 cap.
+        public int[] playerWeaponLevels = new int[4];   // indexed by PlayerWeaponKind
+        public int[] playerWeaponXps = new int[4];
+        public int playerArmorLevel = 0;
+        public int playerArmorXp = 0;
+
+        // pre-per-kind save compat: one global weapon skill old saves carried;
+        // folded into the equipped kind on load, then kept at zero.
         public int playerWeaponLevel = 0;
         public int playerWeaponXp = 0;
 
@@ -138,6 +151,7 @@ namespace PokeProfessions.Core
                 foreach (var c in s.box) if (c != null) { c.NormalizeMoves(); c.RestorePPAfterLoad(); ValidateGear(c); }
                 if (!string.IsNullOrEmpty(s.playerWeapon) && ItemDB.Get(s.playerWeapon) == null) s.playerWeapon = "";
                 if (!string.IsNullOrEmpty(s.playerArmor) && ItemDB.Get(s.playerArmor) == null) s.playerArmor = "";
+                MigrateLegacyWeaponSkill(s);
                 // saves written before the trainer had health (and any save made
                 // while knocked out) wake up whole; health can never exceed the
                 // ceiling its current armour allows.
@@ -147,6 +161,25 @@ namespace PokeProfessions.Core
                 return s;
             }
             catch (Exception) { return null; }
+        }
+
+        /// <summary>
+        /// Saves made before trainer skills were per-kind carry one global
+        /// weapon skill (max Lv50 at +1%/level = +50%). Fold it into the level
+        /// of the kind that was equipped, doubled: the new curve is +0.6%/level
+        /// with a Lv100 cap (+60%), so doubling lands every returning trainer
+        /// at or above the power they had. The old fields zero out so the
+        /// migration runs once, and whatever partial XP sat on the old curve is
+        /// let go — it meant nothing on the new one.
+        /// </summary>
+        public static void MigrateLegacyWeaponSkill(GameState s)
+        {
+            if (s == null || s.playerWeaponLevel <= 0) return;
+            var kind = PlayerCombat.KindOf(s.playerWeapon);
+            if ((int)kind >= 0)
+                s.playerWeaponLevels[(int)kind] = Mathf.Min(PlayerMastery.MaxLevel, s.playerWeaponLevel * 2);
+            s.playerWeaponLevel = 0;
+            s.playerWeaponXp = 0;
         }
 
         /// <summary>Drop equipped gear ids that no longer exist in the ItemDB (save compat).</summary>

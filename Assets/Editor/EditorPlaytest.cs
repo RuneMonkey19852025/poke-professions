@@ -806,8 +806,10 @@ namespace PokeProfessions.EditorTools
             {
                 s.playerWeapon = "wpn_club";
                 pc.RefreshWeaponProp();
-                s.playerWeaponXp = 0;
-                s.playerWeaponLevel = 0;
+                for (int i = 0; i < 4; i++) { s.playerWeaponLevels[i] = 0; s.playerWeaponXps[i] = 0; }
+                s.playerArmorLevel = 0;
+                s.playerArmorXp = 0;
+                s.playerArmor = "";
 
                 yield return Approach(pc, target);
                 float dist = Vector3.Distance(pc.transform.position, target.transform.position);
@@ -817,7 +819,8 @@ namespace PokeProfessions.EditorTools
                       " want=" + target.wild.speciesId);
 
                 int hp0 = target.wild.curHP;
-                int xp0 = s.playerWeaponXp + s.playerWeaponLevel * 1000;
+                int clubIdx = (int)PlayerWeaponKind.Club;
+                int xp0 = s.playerWeaponXps[clubIdx] + s.playerWeaponLevels[clubIdx] * 1000;
                 int coins0 = s.coins;
 
                 var playerAnim = pc.GetComponentInChildren<Animation>();
@@ -828,7 +831,9 @@ namespace PokeProfessions.EditorTools
                 Check("a swing deals damage (" + hp0 + " -> " + target.wild.curHP + " HP)",
                       target.wild.curHP < hp0);
                 Check("a swing grants weapon skill xp",
-                      s.playerWeaponXp + s.playerWeaponLevel * 1000 > xp0);
+                      s.playerWeaponXps[clubIdx] + s.playerWeaponLevels[clubIdx] * 1000 > xp0);
+                Check("skills are per kind (blade xp untouched by club swings)",
+                      s.playerWeaponXps[(int)PlayerWeaponKind.Blade] == 0);
 
                 // The prop swinging while the body stands in its idle pose is the
                 // exact look this wiring exists to remove.
@@ -866,7 +871,10 @@ namespace PokeProfessions.EditorTools
                     Check("a KO pays coins (" + gained + ", expected " + (5 + target.wild.level) + ")",
                           gained == 5 + target.wild.level);
                     Check("a KO grants skill xp",
-                          s.playerWeaponXp + s.playerWeaponLevel * 1000 > xp0 + 8);
+                          s.playerWeaponXps[clubIdx] + s.playerWeaponLevels[clubIdx] * 1000 > xp0 + 8);
+                    Check("a bare-chested KO grants no armour skill xp",
+                          s.playerArmorLevel == 0 && s.playerArmorXp == 0,
+                          "armour xp " + s.playerArmorXp);
                     Check("a KO disables further striking",
                           target.GetComponent<Collider>() == null ||
                           !target.GetComponent<Collider>().enabled);
@@ -928,6 +936,61 @@ namespace PokeProfessions.EditorTools
             pc.TakeHit(1);
             Check("a trivial hit still costs 1 health (" + (youHp - s.playerHP) + ")",
                   youHp - s.playerHP == 1, "mitigation must not make the trainer immune");
+
+            // ---------------- 6b+. trainer skills (PlayerMastery) ----------------
+            // The trainer levels skills exactly the way creatures level mastery:
+            // per weapon kind from landed hits and KOs, armour skill from KOs
+            // landed while wearing armour. Formula checks run through the real
+            // functions; the damage check goes through the real hit path.
+            s.playerArmorLevel = 0;
+            s.playerArmorXp = 0;
+            PlayerMastery.AddArmorXpForKO(s);   // armour is worn here (arm_aegis)
+            Check("a KO while wearing armour grows the armour skill",
+                  s.playerArmorXp == PlayerMastery.ArmorXpPerKO,
+                  "armour xp " + s.playerArmorXp + ", want " + PlayerMastery.ArmorXpPerKO);
+
+            string wornArmor = s.playerArmor;
+            s.playerArmor = "";
+            PlayerMastery.AddArmorXpForKO(s);
+            Check("a bare-chested KO teaches the armour skill nothing",
+                  s.playerArmorXp == PlayerMastery.ArmorXpPerKO);
+            s.playerArmor = wornArmor;
+
+            s.playerWeaponLevels[(int)PlayerWeaponKind.Blade] = 0;
+            s.playerWeaponXps[(int)PlayerWeaponKind.Blade] = 0;
+            s.playerWeaponXps[(int)PlayerWeaponKind.Club] = 0;
+            PlayerMastery.AddWeaponXp(s, PlayerWeaponKind.Blade, 30);
+            Check("weapon skill is per kind (blade levels, club untouched)",
+                  s.playerWeaponLevels[(int)PlayerWeaponKind.Blade] == 2 &&
+                  s.playerWeaponXps[(int)PlayerWeaponKind.Club] == 0,
+                  "blade Lv" + s.playerWeaponLevels[(int)PlayerWeaponKind.Blade] +
+                  ", club xp " + s.playerWeaponXps[(int)PlayerWeaponKind.Club]);
+
+            s.playerWeaponLevels[(int)PlayerWeaponKind.Club] = 50;
+            Check("weapon skill adds +0.6% damage per level",
+                  Mathf.Abs(PlayerMastery.AttackMultiplier(s, PlayerWeaponKind.Club) - 1.3f) < 0.001f,
+                  "mult " + PlayerMastery.AttackMultiplier(s, PlayerWeaponKind.Club).ToString("0.000"));
+
+            // Through the real hit path: armour skill 20 (−10%) trims the same
+            // 30-damage blow below what plain legendary armour let through.
+            s.playerArmorLevel = 20;
+            youHp = s.playerHP;
+            pc.TakeHit(30);
+            int skilledLoss = youHp - s.playerHP;
+            int wantSkilled = Mathf.RoundToInt((30 - soakPerHit) * 0.9f);
+            Check("armour skill turns the same hit further (" + skilledLoss + " vs " + armedLoss + " plain)",
+                  skilledLoss == wantSkilled && skilledLoss < armedLoss, "want " + wantSkilled);
+            s.playerArmorLevel = 0;
+
+            // Old saves carried one global weapon skill; it folds into the kind
+            // they were wearing, doubled (old cap +50% → new cap +60%).
+            var mig = new GameState();
+            mig.playerWeapon = "wpn_blade";
+            mig.playerWeaponLevel = 37;
+            GameState.MigrateLegacyWeaponSkill(mig);
+            Check("old saves fold their weapon skill into the kind worn (×2, cap 100)",
+                  mig.playerWeaponLevels[(int)PlayerWeaponKind.Blade] == 74 && mig.playerWeaponLevel == 0,
+                  "blade Lv" + mig.playerWeaponLevels[(int)PlayerWeaponKind.Blade]);
 
             // ---------------- 6c. wild creatures fight back ----------------
             s.playerArmor = "";

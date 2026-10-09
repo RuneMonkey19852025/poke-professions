@@ -109,7 +109,8 @@ namespace PokeProfessions.UI
             bestText.text = "Creatures caught: " + s.catchCount +
                             " · Battles won: " + s.battleWins +
                             "\nSpecies recorded: " + s.caughtSpecies.Count + " / " + CreatureDB.Order.Count +
-                            "\n\n<b>— Weapon mastery —</b>\n" + MasteryLines(s);
+                            "\n\n<b>— Weapon mastery —</b>\n" + MasteryLines(s) +
+                            "\n<b>— Trainer skills —</b>\n" + TrainerSkillLines(s);
         }
 
         public void Show(bool on)
@@ -135,6 +136,29 @@ namespace PokeProfessions.UI
                     (lvl >= WeaponMastery.MaxLevel ? " MAX" : "  (" + WeaponMastery.Xp(s, wc) + "/" + need + ")") +
                     "  " + effect);
             }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// The trainer's own skills (PlayerMastery), listed beside the creatures'
+        /// mastery so both progressions read in the same place, same shape.
+        /// </summary>
+        static string TrainerSkillLines(GameState s)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (PlayerWeaponKind kind in System.Enum.GetValues(typeof(PlayerWeaponKind)))
+            {
+                if (kind == PlayerWeaponKind.None) continue;
+                int lvl = PlayerMastery.Level(s, kind);
+                int need = PlayerMastery.XpToNext(lvl);
+                sb.AppendLine(PlayerMastery.KindName(kind) + ": Lv" + lvl +
+                    (lvl >= PlayerMastery.MaxLevel ? " MAX" : "  (" + PlayerMastery.Xp(s, kind) + "/" + need + ")") +
+                    "  +" + Mathf.RoundToInt((PlayerMastery.AttackMultiplier(s, kind) - 1f) * 100f) + "% dmg");
+            }
+            int al = PlayerMastery.ArmorLevel(s);
+            sb.AppendLine("Armour: Lv" + al +
+                (al >= PlayerMastery.MaxLevel ? " MAX" : "  (" + PlayerMastery.ArmorXp(s) + "/" + PlayerMastery.XpToNext(al) + ")") +
+                "  −" + PlayerMastery.DefenseReducePercent(s) + "% dmg taken");
             return sb.ToString();
         }
     }

@@ -127,12 +127,12 @@ namespace PokeProfessions.UI
                 "    <color=#6FCF97>" + PlayerCombat.HealthLabel(s) + " HP</color>";
 
             if (string.IsNullOrEmpty(s.playerWeapon))
-                skillText.text = "Weapon skill grows as you land hits.";
+                skillText.text = "Bare hands teach nothing — equip a weapon to grow its kind's skill.";
             else
             {
-                int need = PlayerCombat.XpToNext(Mathf.Min(s.playerWeaponLevel, (int)PlayerCombat.MaxMasteryLevel - 1));
-                skillText.text = "Skill Lv" + s.playerWeaponLevel + "   xp " + s.playerWeaponXp + "/" + need +
-                                 "   (+" + s.playerWeaponLevel + "% damage)";
+                var kind = PlayerCombat.KindOf(s.playerWeapon);
+                skillText.text = PlayerMastery.KindLine(s, kind) + " damage" +
+                                 "   |   " + PlayerMastery.ArmorLine(s);
             }
 
             // ---- weapons: bare hands, then everything owned (or worn) ----
@@ -288,10 +288,13 @@ namespace PokeProfessions.UI
             if (string.IsNullOrEmpty(w))
                 sb.AppendLine("Bare hands: 2 dmg, short reach. Doesn't build skill.");
             else
+            {
+                var wk = PlayerCombat.KindOf(w);
                 sb.AppendLine(ItemRarity.Line(w) + "   DMG " + PlayerCombat.BaseDamage(w) +
                               "   cooldown " + PlayerCombat.Cooldown(w).ToString("0.0") + "s" +
                               "   reach " + PlayerCombat.Reach(w).ToString("0.0") +
-                              "   (+" + s.playerWeaponLevel + "% from skill)");
+                              "   (+" + Mathf.RoundToInt((PlayerMastery.AttackMultiplier(s, wk) - 1f) * 100f) + "% from skill)");
+            }
 
             string a = s.playerArmor;
             if (string.IsNullOrEmpty(a))
@@ -301,8 +304,8 @@ namespace PokeProfessions.UI
                               " per hit   HP " + PlayerCombat.BaseHP + " +" +
                               (PlayerCombat.MaxHP(s) - PlayerCombat.BaseHP) + " = " + PlayerCombat.MaxHP(s));
 
-            sb.Append("Craft the ladder at the Weaponsmith's Bench, the Armourer's Stand or the Gearwright's Table.\n");
-            sb.Append("Greyed rungs aren't yours yet — the line beside them says where to buy or forge one.");
+            sb.AppendLine("Skills: " + PlayerMastery.SummaryLine(s));
+            sb.Append("Craft the ladder at the Weaponsmith's Bench, the Armourer's Stand or the Gearwright's Table — greyed rungs say where to buy or forge one.");
             return sb.ToString();
         }
 

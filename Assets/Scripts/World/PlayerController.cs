@@ -363,12 +363,14 @@ namespace PokeProfessions.World
 
             int dmg = PlayerCombat.DamageRoll(s);
             bool ko = target.Hit(dmg, dir);
-            PlayerCombat.AddXp(s, PlayerCombat.XpPerHit);
+            var kind = PlayerCombat.KindOf(s.playerWeapon);
+            PlayerMastery.AddWeaponXp(s, kind, PlayerMastery.XpPerHit);
 
             if (ko)
             {
                 target.KO(s);
-                PlayerCombat.AddXp(s, PlayerCombat.XpPerKO);
+                PlayerMastery.AddWeaponXp(s, kind, PlayerMastery.XpPerKO);
+                PlayerMastery.AddArmorXpForKO(s);   // worn armour learns from a won fight
                 aimTarget = null;
             }
         }
